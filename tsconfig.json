@@ -1,0 +1,35 @@
+{
+    "compileOnSave": true,
+    "compilerOptions": {
+        "allowJs": true,
+        "allowSyntheticDefaultImports": true,
+        "jsx": "react",
+        "isolatedModules": true,
+        "lib": [
+            "es2015",
+            "es2017",
+            "dom"
+        ],
+        "baseUrl": ".",
+        "paths": {
+            "*": [
+                "*", 
+                "node_modules/react-contextmenu/dist/*",
+                "node_modules/electron/*"
+            ]
+        },
+        "module": "es6",
+        "moduleResolution": "node",
+        "resolveJsonModule": true,
+        "target": "es6"
+    },
+    "include": [
+        "./src/ts/*.ts",
+        "./src/ts/*.tsx",
+        "./src/ts/**/*.ts",
+        "./src/ts/**/*.tsx",
+        "./src/ts/**/**/*.ts",
+        "./src/ts/**/**/*.tsx",
+    ],
+    "exclude": ["node_modules"]
+}
