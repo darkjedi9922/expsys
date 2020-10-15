@@ -5,11 +5,5 @@ node_modules
 package-lock.json
 src/ts/components/**/*.css.json
 
-# Unused fontello files.
-src/libs/fontello/css/animation.css
-src/libs/fontello/css/fontello-ie*
-src/libs/fontello/font/*
-# Use fontello-embedded.css with pre-compiled fonts instead fontello.css.
-src/libs/fontello/css/fontello.css
-# SVG font is used to load it on fontello icon select service as "save point".
-!src/libs/fontello/font/fontello.svg
+src/libs/fontello/*
+!src/libs/fontello/config.json
