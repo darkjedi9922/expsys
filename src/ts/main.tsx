@@ -1,10 +1,10 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
-import RuleAddWindow from './components/rule-add-window/rule-add-window';
 import { Provider } from 'react-redux';
 import store from './store';
+import MainWindow from './components/main-window/main-window';
 
 ReactDOM.render(
-    <Provider store={store}><RuleAddWindow/></Provider>,
+    <Provider store={store}><MainWindow/></Provider>,
     document.getElementById("app")
 );

@@ -3,20 +3,21 @@ import Container from 'react-bootstrap/Container';
 import Row from 'react-bootstrap/Row';
 import Col from 'react-bootstrap/Col';
 import RuleEditor from '../rule-editor/rule-editor';
-import css from './rule-add-window.css.json';
+import { generateRandomString } from '../../util';
+import CenterWindow from '../center-window/center-window';
 
 class RuleAddWindow extends React.Component {
 
     public render(): React.ReactNode {
-        return <div className={css.root}>
+        return <CenterWindow>
             <Container>
                 <Row>
                     <Col>
-                        <RuleEditor />
+                        <RuleEditor id={generateRandomString(6)} />
                     </Col>
                 </Row>
             </Container>
-        </div>
+        </CenterWindow>
     }
 }
 
