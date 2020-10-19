@@ -18,10 +18,10 @@ const tsProject = ts.createProject({
 gulp.task('typescript:build', function() {
     return gulp.src('src/ts/**/*.@(ts|tsx)')
         .pipe(tsProject())
-        .pipe(gulp.dest('dest/js')) 
+        .pipe(gulp.dest('dist/js')) 
 });
 gulp.task('typescript:clear', function () {
-    return del('dest/js/**/*.js');
+    return del('dist/js/**/*.js');
 });
 gulp.task('typescript', gulp.series(
     'typescript:clear',
@@ -35,15 +35,15 @@ gulp.task('sass-modules:build', function() {
             postcssImport(),
             postcssModules({ localsConvention: 'camelCaseOnly' })
         ]))
-        .pipe(gulp.dest('dest/js/components'));
+        .pipe(gulp.dest('dist/js/components'));
 });
 gulp.task('sass-modules:move', function() {
     return gulp.src('src/ts/components/**/*.css.json')
-        .pipe(gulp.dest('dest/js/components'));
+        .pipe(gulp.dest('dist/js/components'));
 });
 gulp.task('sass-modules:clear', function() {
     return del([
-        'dest/js/components/**/*.css*',
+        'dist/js/components/**/*.css*',
         'src/ts/components/**/*.css.json'
     ]);
 });
@@ -57,13 +57,13 @@ gulp.task('sass-common', function() {
     return gulp.src('src/scss/**')
         .pipe(sass({ importer: tildeImporter }))
         .pipe(postcss([ postcssImport() ]))
-        .pipe(gulp.dest('dest/css'))
+        .pipe(gulp.dest('dist/css'))
 });
 
 gulp.task('sass-assemble', function() {
-    return gulp.src(['dest/css/**', 'dest/js/components/**/*.css'])
+    return gulp.src(['dist/css/**', 'dist/js/components/**/*.css'])
         .pipe(concat('asset.css'))
-        .pipe(gulp.dest('dest/assets'))
+        .pipe(gulp.dest('dist/assets'))
 });
 
 gulp.task('build', gulp.series(

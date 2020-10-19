@@ -1,6 +1,6 @@
 /_*
 build
-dest
+dist
 node_modules
 package-lock.json
 src/ts/components/**/*.css.json

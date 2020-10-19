@@ -13,12 +13,10 @@ type Rule = {
 type Context = { [parameter: string]: string }
 
 async function findRule(db: Db, aim: string, blocked: ObjectId[]): Promise<Rule|null> {
-    console.log('Finding in db');
     let result = await db.collection<Rule>('rules').findOne({
         'answer.parameter': aim,
         _id: { $nin: blocked }
     });
-    console.log('Found in db');
     return result;
 }
 
@@ -46,9 +44,7 @@ function findUnknownAttr(rule: Rule, context: Context): string | null {
 }
 
 export default async function * resolve(attribute: string) {
-    console.log('Connecting to db');
     let db = await connectDb();
-    console.log('Connected to db');
     let context: Context = {};
     let aims: string[] = [attribute];
     let blocked: ObjectId[] = [];
