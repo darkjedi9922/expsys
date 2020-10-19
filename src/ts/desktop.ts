@@ -15,33 +15,33 @@ export function save(file: string, contents: string) {
 /**
  * If saving was cancelled, returns an empty string.
  */
-export function saveAs(contents: string): string {
-    const file = dialog.showSaveDialog({
+export async function saveAs(contents: string): Promise<string> {
+    const file = await dialog.showSaveDialog({
         defaultPath: 'new-graph',
         filters: appFilesFilters
     });
 
     if (!file) return '';
 
-    save(file, contents);
-    return file;
+    save(file.filePath, contents);
+    return file.filePath;
 }
 
 /**
  * If opening was cancelled, returns null.
  */
-export function open(): {
+export async function open(): Promise<{
     file: string,
     contents: string
-} | null {
-    const files = dialog.showOpenDialog({
+} | null> {
+    const files = await dialog.showOpenDialog({
         filters: appFilesFilters,
         properties: [
             'openFile'
         ]
     });
 
-    if (!files.length) return null;
+    if (!files.filePaths.length) return null;
 
     return {
         file: files[0],

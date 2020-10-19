@@ -26,7 +26,11 @@ app.on('ready', function () {
 
     mainWindow = new BrowserWindow({
         width: 800,
-        height: 600
+        height: 600,
+        webPreferences: {
+            enableRemoteModule: true,
+            nodeIntegration: true
+        }
     });
     mainWindow.loadURL(path.join('file://', __dirname, '/index.html'));
     mainWindow.on('closed', function () {

@@ -4,7 +4,7 @@ import { remote } from 'electron';
 const uri = 'mongodb://localhost:27017/?poolSize=20&w=majority';
 const client = new MongoClient(uri, { useUnifiedTopology: true });
 
-let connection = null
+let connection: Db = null
 
 const connect = async (): Promise<Db> => {
     if (connection === null) {

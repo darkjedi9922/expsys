@@ -2,7 +2,7 @@ import {
     ADD_RULE_EDITOR_ID,
     RuleActionTypes,
     RuleState
-} from "./types";
+} from './types';
 
 const initialState: RuleState = {
     addRuleEditorIds: []

@@ -10,6 +10,7 @@ import { Rule } from '../../store/rules/types';
 import Alert from 'react-bootstrap/Alert';
 import classNames from 'classnames';
 import css from './rule-editor.css.json';
+import { generateRandomString } from '../../util';
 
 interface OwnProps {
     id: string
@@ -19,28 +20,27 @@ interface StoreProps {
     isAdded: boolean
 }
 
-interface DispatchProps {
-    addRule: (editorId: string, rule: Rule) => void
-}
-
-type Props = OwnProps & StoreProps & DispatchProps;
-
 const mapState = (state: RootState, ownProps: OwnProps): StoreProps => ({
     isAdded: state.rules.addRuleEditorIds.includes(ownProps.id)
 })
 
-const mapDispatch: DispatchProps = {
-    addRule
-}
+const mapDispatch = { addRule }
+
+type Props = OwnProps & StoreProps & typeof mapDispatch;
 
 interface Pair {
     parameter: string,
     value: string
 }
 
+interface Condition extends Pair {
+    inputId: string
+}
+
 interface State {
-    conditions: Pair[],
-    answer: Pair
+    conditions: Condition[],
+    answer: Pair,
+    isSubmitted: boolean
 }
 
 class RuleEditor extends React.Component<Props, State> {
@@ -52,17 +52,19 @@ class RuleEditor extends React.Component<Props, State> {
             answer: {
                 parameter: '',
                 value: ''
-            }
+            },
+            isSubmitted: false
         };
     }
 
-    public render() {
+    public render(): JSX.Element {
         let { props, state } = this;
         return <Form onSubmit={(e) => {
             props.addRule(props.id, this.assembleRule());
+            this.setState({ isSubmitted: true });
             e.preventDefault();
         }}>
-            {props.isAdded && <Alert variant="success">Правило успешно добавлено</Alert>}
+            {state.isSubmitted && props.isAdded && <Alert variant="success">Правило успешно добавлено</Alert>}
             {state.conditions.map((cond, index) => 
                 <Form.Group as={Row} key={index} className={classNames({
                     [css.additionRow]: index !== 0 && cond.parameter === '' && cond.value === ''
@@ -85,6 +87,7 @@ class RuleEditor extends React.Component<Props, State> {
         return {
             answer: this.state.answer,
             conditions: this.state.conditions.reduce((object, condition) => {
+                if (condition.parameter === '' && condition.value === '') return object;
                 object[condition.parameter] = condition.value;
                 return object
             }, {})
@@ -99,12 +102,16 @@ class RuleEditor extends React.Component<Props, State> {
                 // Either parameter was empty or it became empty. Otherwise there
                 // is no change and this method is not called
                 if (oldCondition.parameter === '') {
-                    newState.conditions.push({ parameter: '', value: '' });
+                    newState.conditions.push({
+                        inputId: generateRandomString(5),
+                        parameter: '', value: ''
+                    });
                 } else if (name === '') {
                     newState.conditions.pop();
                 }
             }
             newState.conditions[index].parameter = name;
+            newState.isSubmitted = false;
             return newState;
         });
     }
@@ -117,12 +124,16 @@ class RuleEditor extends React.Component<Props, State> {
                 // Either value was empty or it became empty. Otherwise there
                 // is no change and this method is not called
                 if (oldCondition.value === '') {
-                    newState.conditions.push({ parameter: '', value: '' });
+                    newState.conditions.push({
+                        inputId: generateRandomString(5),
+                        parameter: '', value: ''
+                    });
                 } else if (value === '') {
                     newState.conditions.pop();
                 }
             }
             newState.conditions[index].value = value;
+            newState.isSubmitted = false;
             return newState;
         });
     }
@@ -132,19 +143,22 @@ class RuleEditor extends React.Component<Props, State> {
             answer: {
                 ...state.answer,
                 parameter: name
-            }
+            },
+            isSubmitted: false
         }));
     }
 
     private setAnswerValue(value: string) {
         this.setState((state) => ({
-            answer: { ...state.answer, value }
+            answer: { ...state.answer, value },
+            isSubmitted: false
         }));
     }
 
-    private generateConditionsWithOneEmptyInput(currentConditions: Pair[]): Pair[] {
+    private generateConditionsWithOneEmptyInput(currentConditions: Condition[]): Condition[] {
         let result = currentConditions.filter(cond => cond.parameter !== '' || cond.value !== '');
         result.push({
+            inputId: generateRandomString(5),
             parameter: '',
             value: ''
         });
@@ -152,4 +166,4 @@ class RuleEditor extends React.Component<Props, State> {
     }
 }
 
-export default connect<StoreProps, DispatchProps, OwnProps>(mapState, mapDispatch)(RuleEditor);
+export default connect<StoreProps, typeof mapDispatch>(mapState, mapDispatch)(RuleEditor);
