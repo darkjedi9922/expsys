@@ -1,46 +1,40 @@
 import React from 'react';
 import Form from 'react-bootstrap/Form';
 import Row from 'react-bootstrap/Row';
-import Button from 'react-bootstrap/Button';
 import RuleInput from '../rule-input/rule-input';
 import { RootState } from '../../store';
 import { connect } from 'react-redux';
-import { addRule } from '../../store/rules/actions';
-import { Rule } from '../../store/rules/types';
+import { updateRule } from '../../store/rules/actions';
+import { Attribute, InputEditor, Rule } from '../../store/rules/types';
 import Alert from 'react-bootstrap/Alert';
 import classNames from 'classnames';
 import css from './rule-editor.css.json';
 import { generateRandomString } from '../../util';
+import EditorLayout from '../editor-layout/editor-layout';
 
 interface OwnProps {
     id: string
 }
 
 interface StoreProps {
-    isAdded: boolean
+    isAddedNotify: boolean
 }
 
-const mapState = (state: RootState, ownProps: OwnProps): StoreProps => ({
-    isAdded: state.rules.addRuleEditorIds.includes(ownProps.id)
+const mapState = (state: RootState, props: OwnProps): StoreProps => ({
+    isAddedNotify: (state.rules.editors.find(e => e.id === props.id) as InputEditor).isRuleAddedNotify
 })
 
-const mapDispatch = { addRule }
+const mapDispatch = { updateRule }
 
 type Props = OwnProps & StoreProps & typeof mapDispatch;
 
-interface Pair {
-    parameter: string,
-    value: string
-}
-
-interface Condition extends Pair {
+interface Condition extends Attribute {
     inputId: string
 }
 
 interface State {
     conditions: Condition[],
-    answer: Pair,
-    isSubmitted: boolean
+    answer: Attribute
 }
 
 class RuleEditor extends React.Component<Props, State> {
@@ -52,35 +46,31 @@ class RuleEditor extends React.Component<Props, State> {
             answer: {
                 parameter: '',
                 value: ''
-            },
-            isSubmitted: false
+            }
         };
     }
 
     public render(): JSX.Element {
         let { props, state } = this;
-        return <Form onSubmit={(e) => {
-            props.addRule(props.id, this.assembleRule());
-            this.setState({ isSubmitted: true });
-            e.preventDefault();
-        }}>
-            {state.isSubmitted && props.isAdded && <Alert variant="success">Правило успешно добавлено</Alert>}
-            {state.conditions.map((cond, index) => 
-                <Form.Group as={Row} key={index} className={classNames({
-                    [css.additionRow]: index !== 0 && cond.parameter === '' && cond.value === ''
-                })}>
-                    <RuleInput size={6} label={index === 0 ? 'Если' : 'и'} 
-                        placeholder="параметр" onChange={(value) => this.setConditionParamter(value, index)} />
-                    <RuleInput size={6} label="="
-                        placeholder="значение" onChange={(value) => this.setConditionValue(value, index)} />
+        return <EditorLayout title="Новое правило">
+            <Form onSubmit={(e) => e.preventDefault()}>
+                {props.isAddedNotify && <Alert variant="success">Правило успешно добавлено</Alert>}
+                {state.conditions.map((cond, index) =>
+                    <Form.Group as={Row} key={index} className={classNames({
+                        [css.additionRow]: index !== 0 && cond.parameter === '' && cond.value === ''
+                    })}>
+                        <RuleInput size={6} label={index === 0 ? 'Если' : 'и'}
+                            placeholder="параметр" onChange={(value) => this.setConditionParamter(value, index)} />
+                        <RuleInput size={6} label="="
+                            placeholder="значение" onChange={(value) => this.setConditionValue(value, index)} />
+                    </Form.Group>
+                )}
+                <Form.Group as={Row}>
+                    <RuleInput size={6} label="то" placeholder="параметр" onChange={(value) => this.setAnswerParameter(value)} />
+                    <RuleInput size={6} label="=" placeholder="значение" onChange={(value) => this.setAnswerValue(value)} />
                 </Form.Group>
-            )}
-            <Form.Group as={Row}>
-                <RuleInput size={6} label="то" placeholder="параметр" onChange={(value) => this.setAnswerParameter(value)} />
-                <RuleInput size={6} label="=" placeholder="значение" onChange={(value) => this.setAnswerValue(value)} />
-            </Form.Group>
-            <Button variant="primary" type="submit">Добавить</Button>
-        </Form>
+            </Form>
+        </EditorLayout> 
     }
 
     private assembleRule(): Rule {
@@ -111,9 +101,9 @@ class RuleEditor extends React.Component<Props, State> {
                 }
             }
             newState.conditions[index].parameter = name;
-            newState.isSubmitted = false;
             return newState;
         });
+        this.props.updateRule(this.props.id, this.assembleRule());
     }
 
     private setConditionValue(value: string, index: number) {
@@ -133,9 +123,9 @@ class RuleEditor extends React.Component<Props, State> {
                 }
             }
             newState.conditions[index].value = value;
-            newState.isSubmitted = false;
             return newState;
         });
+        this.props.updateRule(this.props.id, this.assembleRule());
     }
 
     private setAnswerParameter(name: string) {
@@ -143,16 +133,16 @@ class RuleEditor extends React.Component<Props, State> {
             answer: {
                 ...state.answer,
                 parameter: name
-            },
-            isSubmitted: false
+            }
         }));
+        this.props.updateRule(this.props.id, this.assembleRule());
     }
 
     private setAnswerValue(value: string) {
         this.setState((state) => ({
-            answer: { ...state.answer, value },
-            isSubmitted: false
+            answer: { ...state.answer, value }
         }));
+        this.props.updateRule(this.props.id, this.assembleRule());
     }
 
     private generateConditionsWithOneEmptyInput(currentConditions: Condition[]): Condition[] {

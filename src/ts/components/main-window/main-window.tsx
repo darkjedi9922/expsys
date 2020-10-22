@@ -11,7 +11,7 @@ import { Link, Route, Switch } from 'react-router-dom';
 const MainWindow = function(): JSX.Element {
     return <Container fluid={true} className={css.root}>
         <Row className={css.content}>
-            <Col>
+            <Col className="py-3">
                 <Switch>
                     <Route exact path="/" component={QueryWindow} />
                     <Route path="/rules/add" component={RuleAddWindow} />

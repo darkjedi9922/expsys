@@ -1,5 +1,5 @@
 import { MongoClient, Db } from 'mongodb';
-import { remote } from 'electron';
+import { app } from 'electron';
 
 const uri = 'mongodb://localhost:27017/?poolSize=20&w=majority';
 const client = new MongoClient(uri, { useUnifiedTopology: true });
@@ -22,6 +22,6 @@ const connect = async (): Promise<Db> => {
     return connection;
 }
 
-remote.app.on('quit', () => client.close());
+app.on('quit', () => client.close());
 
 export { connect as connectDb };

@@ -1,5 +1,5 @@
 import { Db, ObjectId } from 'mongodb';
-import { connectDb } from './db';
+import { connectDb } from './electron/renderer/db';
 
 type Rule = {
     _id: ObjectId,

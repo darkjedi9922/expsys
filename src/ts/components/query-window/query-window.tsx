@@ -13,6 +13,7 @@ import { RootState } from '../../store';
 import HintInput from '../hint-input/hint-input';
 import { isNil } from 'lodash';
 import Alert from 'react-bootstrap/Alert';
+import AttributeInput from '../attribute-input/attribute-input';
 
 interface StoreProps {
     askingAttribute?: string,
@@ -51,15 +52,13 @@ class QueryWindow extends React.Component<Props, State> {
                     <Col>
                         <Navbar bg="light" expand="lg">
                             <Navbar.Brand>Что вы хотите узнать?</Navbar.Brand>
-                            <Navbar.Toggle aria-controls="basic-navbar-nav" />
                             <Navbar.Collapse id="basic-navbar-nav">
                                 <Form inline className="col-12 justify-content-md-end" onSubmit={(e) => {
                                     props.startQuery(state.attribute);
                                     e.preventDefault();
                                 }}>
-                                    <FormControl type="text" placeholder="Параметр" className="mr-sm-2" 
-                                        onChange={(e) => this.setState({ attribute: e.target.value })} />
-                                    <Button variant="outline-success" type="submit">Вперед</Button>
+                                    <AttributeInput type="name" onChange={(value) => this.setState({ attribute: value })} />
+                                    <Button variant="outline-success" type="submit" className="ml-sm-2">Вперед</Button>
                                 </Form>
                             </Navbar.Collapse>
                         </Navbar>
