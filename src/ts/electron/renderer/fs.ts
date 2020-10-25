@@ -1,4 +1,5 @@
 import { remote } from 'electron' 
+import * as fs from 'fs';
 
 const dialog = remote.dialog;
 
@@ -15,5 +16,9 @@ export async function open(extFilter: string[] = []): Promise<string | null> {
     });
 
     if (!files.filePaths.length) return null;
-    return files[0];
+    return files.filePaths[0];
+}
+
+export async function readFile(file: string): Promise<string> {
+    return fs.readFileSync(file).toString();
 }

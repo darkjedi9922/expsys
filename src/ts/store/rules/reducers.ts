@@ -6,7 +6,10 @@ import {
     RuleActionTypes,
     RuleState,
     UPDATE_RULE,
-    ADD_EDITOR
+    ADD_EDITOR,
+    IMPORT_FILE,
+    ImportEditor,
+    INDUCT_RULES
 } from './types';
 
 const initialState: RuleState = {
@@ -25,14 +28,35 @@ export function ruleReducer(state = initialState, action: RuleActionTypes): Rule
                             id: generateRandomString(6),
                             type: EditorType.INPUT,
                             isRuleAddedNotify: false,
-                            currentRule: null
                         } : {
                             id: generateRandomString(6),
                             type: EditorType.IMPORTER,
-                            currentFile: null
+                            isRuleAddedNotify: false
                         }
                 ]
-            }
+            };
+        case IMPORT_FILE:
+            return {
+                ...state,
+                editors: [
+                    ...state.editors.filter(e => e.id !== action.importerId),
+                    {
+                        ...state.editors.find(e => e.id === action.importerId),
+                        currentFile: action.file
+                    } as ImportEditor
+                ]
+            };
+        case INDUCT_RULES:
+            return {
+                ...state,
+                editors: [
+                    ...state.editors.filter(e => e.id !== action.importerId),
+                    {
+                        ...state.editors.find(e => e.id === action.importerId),
+                        generatedRules: action.rules
+                    } as ImportEditor
+                ]
+            };
         case NOTIFY_RULE_ADDED:
             return {
                 ...state,

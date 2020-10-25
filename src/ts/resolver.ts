@@ -1,4 +1,5 @@
-import { Db, ObjectId } from 'mongodb';
+import { isNil } from 'lodash';
+import { ObjectId } from 'mongodb';
 import { connectDb } from './electron/renderer/db';
 
 type Rule = {
@@ -12,71 +13,55 @@ type Rule = {
 
 type Context = { [parameter: string]: string }
 
-async function findRule(db: Db, aim: string, blocked: ObjectId[]): Promise<Rule|null> {
-    let result = await db.collection<Rule>('rules').findOne({
-        'answer.parameter': aim,
-        _id: { $nin: blocked }
-    });
-    return result;
-}
+export default async function * resolveRecursively(attribute: string,
+    context: Context = {}, searchingAttributes: { [attr: string]: boolean } = {}):
+    AsyncGenerator<string, string, string> {
+    console.log(`Finding attribute ${attribute}`);
+    if (!isNil(context[attribute])) return context[attribute];
 
-function isRuleTrue(rule: Rule, context: Context): boolean {
-    for (const cond in rule.conditions) {
-        if (!Object.keys(context).includes(cond)) return false;
-        if (rule.conditions[cond] !== context[cond]) return false;
-    }
-    return true;
-}
-
-function isRuleFalse(rule: Rule, context: Context): boolean {
-    for (const cond in rule.conditions) {
-        if (!Object.keys(context).includes(cond)) return false;
-        if (rule.conditions[cond] !== context[cond]) return true;
-    }
-    return false;
-}
-
-function findUnknownAttr(rule: Rule, context: Context): string | null {
-    for (const cond in rule.conditions) {
-        if (!Object.keys(context).includes(cond)) return cond;
-    }
-    return null;
-}
-
-export default async function * resolve(attribute: string) {
+    searchingAttributes[attribute] = true;
+    
+    // At this point attribute value is unknown
     let db = await connectDb();
-    let context: Context = {};
-    let aims: string[] = [attribute];
-    let blocked: ObjectId[] = [];
-
-    while (aims.length !== 0) {
-        let currentAim = aims[0];
-        let rule = await findRule(db, currentAim, blocked);
-        if (rule !== null) {
-            if (isRuleTrue(rule, context)) {
-                context[currentAim] = rule.answer.value;
-                aims.shift();
-                if (aims.length === 0) {
-                    return context[currentAim];
-                }
-            } else if (isRuleFalse(rule, context)) {
-                blocked.push(rule._id);
-            } else {
-                let unknownAttr = findUnknownAttr(rule, context);
-                aims.unshift(unknownAttr);
+    let rules = db.collection<Rule>('rules').find({ 'answer.parameter': attribute });
+    while (await rules.hasNext()) {
+        let rule = await rules.next();
+        let ruleIsTrue = true;
+        console.log('Handling rule', rule);
+        for (const cond in rule.conditions) {
+            const ruleCondValue = rule.conditions[cond];
+            let resolvedValue = undefined;
+            console.log('searched attributes', searchingAttributes);
+            if (!searchingAttributes[cond]) {
+                console.log(`Need to find attribute ${cond}`);
+                resolvedValue = yield *resolveRecursively(cond, context, searchingAttributes);
+                console.log('Finded value', resolvedValue);
             }
-        } else {
-            let hint: string | null = yield currentAim;
-            if (hint !== null) {
-                context[currentAim] = hint;
-            } else {
-                if (aims.length === 1) {
-                    return null;
-                } else {
-                    context[currentAim] = null;
-                }
+            if (resolvedValue !== ruleCondValue) {
+                console.log('Rule is false', rule);
+                ruleIsTrue = false;
+                break;
             }
-            aims.shift();
+        }
+        if (ruleIsTrue) {
+            console.log('Rule is true', rule);
+            delete searchingAttributes[attribute];
+            context[attribute] = rule.answer.value;
+            return rule.answer.value;
         }
     }
+
+    delete searchingAttributes[attribute];
+    console.log(`After removing ${attribute}`, searchingAttributes);
+
+    // At this point no rules are true, we need more information
+    // Ask if we have not already asked (null value notifies that we asked before)
+    if (context[attribute] !== null) {
+        let hint: string | null = yield attribute;
+        context[attribute] = hint;
+        return hint;
+    }
+
+    // We don't know
+    return null;
 }
