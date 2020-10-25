@@ -8,7 +8,6 @@ import { updateRule } from '../../store/rules/actions';
 import { Attribute, InputEditor, Rule } from '../../store/rules/types';
 import Alert from 'react-bootstrap/Alert';
 import classNames from 'classnames';
-import css from './rule-editor.css.json';
 import { generateRandomString } from '../../util';
 import EditorLayout from '../editor-layout/editor-layout';
 
@@ -57,17 +56,18 @@ class RuleEditor extends React.Component<Props, State> {
                 {props.isAddedNotify && <Alert variant="success">Правило успешно добавлено</Alert>}
                 {state.conditions.map((cond, index) =>
                     <Form.Group as={Row} key={index} className={classNames({
-                        [css.additionRow]: index !== 0 && cond.parameter === '' && cond.value === ''
+                        'addition-rule-editor-row': index !== 0 && cond.parameter === '' && cond.value === ''
                     })}>
                         <RuleInput size={6} label={index === 0 ? 'Если' : 'и'}
-                            placeholder="параметр" onChange={(value) => this.setConditionParamter(value, index)} />
-                        <RuleInput size={6} label="="
-                            placeholder="значение" onChange={(value) => this.setConditionValue(value, index)} />
+                            onChange={(value) => this.setConditionParamter(value, index)} />
+                        <RuleInput attribute={cond.parameter} size={6} label="="
+                            onChange={(value) => this.setConditionValue(value, index)} />
                     </Form.Group>
                 )}
                 <Form.Group as={Row}>
-                    <RuleInput size={6} label="то" placeholder="параметр" onChange={(value) => this.setAnswerParameter(value)} />
-                    <RuleInput size={6} label="=" placeholder="значение" onChange={(value) => this.setAnswerValue(value)} />
+                    <RuleInput size={6} label="то" onChange={(value) => this.setAnswerParameter(value)} />
+                    <RuleInput size={6} label="=" attribute={state.answer.parameter}
+                        onChange={(value) => this.setAnswerValue(value)} />
                 </Form.Group>
             </Form>
         </EditorLayout> 

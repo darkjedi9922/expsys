@@ -1,63 +1,42 @@
+import { isNil } from 'lodash';
 import React from 'react';
-import FormControl from 'react-bootstrap/FormControl';
-import Dropdown from 'react-bootstrap/Dropdown';
 import { connectDb } from '../../electron/renderer/db';
-import OnBlurComponent from '../OnBlurComponent';
-import Card from 'react-bootstrap/Card';
-import styles from './attribute-input.css.json';
+import HintInput from '../hint-input/hint-input';
 
 interface Props {
-    type: 'name' | 'value',
+    attribute?: string,
     className?: string,
+    placeholder?: string,
     onChange: (value: string) => void
 }
 
 interface State {
-    hints: {
-        list: string[],
-        selectedIndex?: number
-    }
+    hints: string[]
 }
 
 class AttributeInput extends React.Component<Props, State> {
 
-    private inputRef = React.createRef<HTMLInputElement>();
-
     public constructor(props: Props) {
         super(props);
         this.state = {
-            hints: {
-                list: [],
-                selectedIndex: null
-            }
+            hints: []
         };
     }
 
-    public render(): JSX.Element {
-        const { props, state } = this;
-        return <OnBlurComponent onBlur={() => this.hideHints()} className={styles.root}>
-            <FormControl type="text" placeholder={props.type === 'name' ? 'Параметр' : 'Значение'}
-                className={props.className} onChange={e => props.onChange(e.target.value)}
-                onFocus={() => this.updateHints()} onKeyDown={(e) => this.onKeyDown(e)}
-                ref={this.inputRef} />
-                <Card className={`${styles.hintBlock} ${styles.card}`}>
-                    <Card.Body className={styles.cardBody}>
-                        {state.hints.list.map((hint, index) => 
-                            <Dropdown.Item key={hint} eventKey={hint} onClick={(e) => {
-                                this.inputRef.current.value = hint;
-                                this.hideHints();
-                                props.onChange(hint);
-                            }} active={state.hints.selectedIndex === index}>{hint}</Dropdown.Item>
-                        )}
-                    </Card.Body>
-                </Card>
-        </OnBlurComponent>
+    public componentDidMount() {
+        this.laodHints();
     }
 
-    private async updateHints() {
+    public componentDidUpdate(prevProps: Props) {
+        if (prevProps.attribute !== this.props.attribute) {
+            this.laodHints();
+        }
+    }
+
+    private async laodHints() {
         let db = await connectDb();
-        if (this.props.type === 'name') {
-            let hints = await db.collection<{ name: string }>('rules').aggregate([
+        if (isNil(this.props.attribute)) {
+            let result = await db.collection<{ name: string }>('rules').aggregate([
                 {
                     '$project': {
                         'name': {
@@ -78,63 +57,36 @@ class AttributeInput extends React.Component<Props, State> {
                 { '$group': { '_id': { 'name': '$name' } } },
                 { '$project': { 'name': '$_id.name', '_id': 0 } }
             ]).toArray();
-            this.setState({
-                hints: {
-                    list: hints.map(h => h.name).sort(),
-                    selectedIndex: null
-                }
-            });
+            this.setState({ hints: result.map(h => h.name).sort() });
+        } else if (this.props.attribute !== '') {
+            let result = await db.collection<{ value: string }>('rules').aggregate([
+                { '$match': { 'answer.parameter': this.props.attribute } },
+                { '$project': { 'value': '$answer.value', '_id': 0 } },
+                {
+                    '$unionWith': {
+                        'coll': 'rules',
+                        'pipeline': [
+                            { '$match': { [`conditions.${this.props.attribute}`]: { '$exists': true } } },
+                            {
+                                '$project': {
+                                    'value': `$conditions.${this.props.attribute}`,
+                                    '_id': 0
+                                }
+                            }
+                        ]
+                    }
+                },
+                { '$group': { '_id': { 'value': '$value' } } },
+                { '$project': { 'value': '$_id.value', '_id': 0 } }
+            ]).toArray();
+            this.setState({ hints: result.map(h => h.value).sort() });
         }
     }
 
-    private hideHints() {
-        this.setState({
-            hints: {
-                list: [],
-                selectedIndex: null
-            }
-        });
-    }
-
-    private onKeyDown(e: React.KeyboardEvent) {
-        if (e.key === 'ArrowDown') {
-            if (this.state.hints.selectedIndex === null) {
-                this.setState((state) => ({
-                    hints: {
-                        list: state.hints.list,
-                        selectedIndex: 0
-                    }
-                }))
-            } else {
-                this.setState((state) => ({
-                    hints: {
-                        list: state.hints.list,
-                        selectedIndex: state.hints.selectedIndex + 1 < state.hints.list.length
-                            ? state.hints.selectedIndex + 1 : 0
-                    }
-                }))
-            }
-            e.preventDefault();
-        } else if (e.key === 'ArrowUp') {
-            if (this.state.hints.selectedIndex === null) {
-                this.setState((state) => ({
-                    hints: {
-                        list: state.hints.list,
-                        selectedIndex: state.hints.list.length - 1,
-                    }
-                }))
-            } else {
-                this.setState((state) => ({
-                    hints: {
-                        list: state.hints.list,
-                        selectedIndex: state.hints.selectedIndex - 1 >= 0
-                            ? state.hints.selectedIndex - 1
-                            : state.hints.list.length - 1
-                    }
-                }))
-            }
-            e.preventDefault();
-        }
+    public render(): JSX.Element {
+        const { props, state } = this;
+        return <HintInput hints={state.hints} className={props.className} 
+            placeholder={props.placeholder} onChange={props.onChange} />
     }
 }
 
