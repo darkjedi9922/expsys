@@ -7,7 +7,6 @@ const postcss = require('gulp-postcss');
 const postcssModules = require('postcss-modules');
 const postcssImport = require('postcss-import');
 const tildeImporter = require('node-sass-tilde-importer');
-const browserify = require('./gulp/browserify');
 
 const tsProject = ts.createProject({
     allowJs: true,
@@ -21,16 +20,12 @@ gulp.task('typescript:build', function() {
         .pipe(tsProject())
         .pipe(gulp.dest('dist/js'))
 });
-gulp.task('typescript:asset', function() {
-    return browserify('dist/js/renderer/**/*.js', 'dist/assets', 'asset.js')
-});
 gulp.task('typescript:clear', function() {
     return del('dist/js/**/*.js');
 });
 gulp.task('typescript', gulp.series(
     'typescript:clear',
-    'typescript:build',
-    'typescript:asset'
+    'typescript:build'
 ));
 
 gulp.task('sass-modules:build', function() {
