@@ -1,15 +1,15 @@
 import React from 'react';
 import Form from 'react-bootstrap/Form';
 import Row from 'react-bootstrap/Row';
-import RuleInput from '../rule-input/rule-input';
-import { RootState } from '../../store';
+import RuleInput from './RuleInput';
+import { RootState } from '../store';
 import { connect } from 'react-redux';
-import { updateRule } from '../../store/rules/actions';
-import { Attribute, InputEditor, Rule } from '../../store/rules/types';
+import { updateRule } from '../store/rules/actions';
+import { Attribute, InputEditor, Rule } from '../store/rules/types';
 import Alert from 'react-bootstrap/Alert';
 import classNames from 'classnames';
-import { generateRandomString } from '../../util';
-import EditorLayout from '../editor-layout/editor-layout';
+import { generateRandomString } from '../util';
+import EditorLayout from './EditorLayout';
 
 interface OwnProps {
     id: string

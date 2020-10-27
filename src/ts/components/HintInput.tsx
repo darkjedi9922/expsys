@@ -1,9 +1,9 @@
 import React from 'react';
 import FormControl from 'react-bootstrap/FormControl';
 import Dropdown from 'react-bootstrap/Dropdown';
-import OnBlurComponent from '../OnBlurComponent';
+import OnBlurComponent from './OnBlurComponent';
 import Card from 'react-bootstrap/Card';
-import styles from './hint-input.css.json';
+import styles from './HintInput.css.json';
 import $ from 'jquery';
 
 interface Props {

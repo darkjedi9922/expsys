@@ -2,14 +2,14 @@ import React from 'react';
 import Col from 'react-bootstrap/Col';
 import Container from 'react-bootstrap/Container';
 import Row from 'react-bootstrap/Row';
-import CenterWindow from '../center-window/center-window';
-import { startQuery, answerHint } from '../../store/query/actions';
+import CenterWindow from './CenterWindow';
+import { startQuery, answerHint } from '../store/query/actions';
 import { connect } from 'react-redux';
-import { RootState } from '../../store';
-import DialogInput from '../dialog-input/dialog-input';
+import { RootState } from '../store';
+import DialogInput from './DialogInput';
 import { isNil } from 'lodash';
 import Alert from 'react-bootstrap/Alert';
-import AskForm from '../ask-form/ask-form';
+import AskForm from './AskForm';
 
 interface StoreProps {
   askingAttribute?: string,

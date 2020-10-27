@@ -2,10 +2,10 @@ import React from 'react';
 import Container from 'react-bootstrap/Container';
 import Row from 'react-bootstrap/Row';
 import Col from 'react-bootstrap/Col';
-import css from './main-window.css.json';
-import QueryWindow from '../query-window/query-window';
-import MenuIcon from '../menu-icon/menu-icon';
-import RuleAddWindow from '../rule-add-window/rule-add-window';
+import css from './MainWindow.css.json';
+import QueryWindow from './QueryWindow';
+import MenuIcon from './MenuIcon';
+import RuleAddWindow from './RuleAddWindow';
 import { Link, Route, Switch } from 'react-router-dom';
 
 const MainWindow = function(): JSX.Element {

@@ -2,7 +2,7 @@ import React from 'react';
 import OverlayTrigger from 'react-bootstrap/OverlayTrigger';
 import Button from 'react-bootstrap/Button';
 import Tooltip from 'react-bootstrap/Tooltip';
-import css from './menu-icon.css.json';
+import css from './MenuIcon.css.json';
 
 interface Props {
     title: string,

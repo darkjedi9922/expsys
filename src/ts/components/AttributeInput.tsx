@@ -1,7 +1,7 @@
 import { isNil } from 'lodash';
 import React from 'react';
-import { connectDb } from '../../electron/renderer/db';
-import HintInput from '../hint-input/hint-input';
+import { connectDb } from '../electron/renderer/db';
+import HintInput from './HintInput';
 
 interface Props {
     attribute?: string,

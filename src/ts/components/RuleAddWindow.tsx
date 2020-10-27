@@ -2,14 +2,14 @@ import React from 'react';
 import Container from 'react-bootstrap/Container';
 import Row from 'react-bootstrap/Row';
 import Col from 'react-bootstrap/Col';
-import InputEditor from '../rule-editor/rule-editor';
-import CenterWindow from '../center-window/center-window';
-import { RootState } from '../../store';
-import { Editor, EditorType } from '../../store/rules/types';
+import InputEditor from './RuleEditor';
+import CenterWindow from './CenterWindow';
+import { RootState } from '../store';
+import { Editor, EditorType } from '../store/rules/types';
 import { connect } from 'react-redux';
-import { addEditor, submitAddRule } from '../../store/rules/actions';
+import { addEditor, submitAddRule } from '../store/rules/actions';
 import Button from 'react-bootstrap/Button';
-import CsvImporter from '../csv-importer/csv-importer';
+import CsvImporter from './CsvImporter';
 import classNames from 'classnames';
 
 interface StoreProps {

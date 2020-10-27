@@ -3,8 +3,7 @@ import Form from 'react-bootstrap/Form';
 import Button from 'react-bootstrap/Button';
 import Col from 'react-bootstrap/Col';
 import Navbar from 'react-bootstrap/Navbar';
-import Row from 'react-bootstrap/Row';
-import AttributeInput from '../attribute-input/attribute-input';
+import AttributeInput from './AttributeInput';
 import Badge from 'react-bootstrap/Badge';
 
 interface Props {
