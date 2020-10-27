@@ -1,5 +1,5 @@
-import { remote } from 'electron' 
-import * as fs from 'fs';
+const { remote } = window.require('electron'); 
+const fs = window.require('fs');
 
 const dialog = remote.dialog;
 

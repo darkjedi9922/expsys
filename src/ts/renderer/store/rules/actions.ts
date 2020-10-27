@@ -1,5 +1,5 @@
 import { ThunkAction } from "redux-thunk";
-import { connectDb } from "../../electron/renderer/db";
+import { connectDb } from "../../electron/db";
 import { RootState } from "..";
 import { 
     ADD_EDITOR,
@@ -12,7 +12,7 @@ import {
     RuleEditorId,
     UPDATE_RULE
 } from "./types";
-import * as fs from '../../electron/renderer/fs'; 
+import * as fs from '../../electron/fs'; 
 import generateProductionRules from "../../inductor";
 import papaparse from 'papaparse';
 import { isNil } from "lodash";

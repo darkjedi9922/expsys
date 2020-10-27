@@ -8,7 +8,7 @@ import { updateRule } from '../store/rules/actions';
 import { Attribute, InputEditor, Rule } from '../store/rules/types';
 import Alert from 'react-bootstrap/Alert';
 import classNames from 'classnames';
-import { generateRandomString } from '../util';
+import { generateRandomString } from '../../common/util';
 import EditorLayout from './EditorLayout';
 
 interface OwnProps {

@@ -1,6 +1,6 @@
 import { isNil } from 'lodash';
 import { ObjectId } from 'mongodb';
-import { connectDb } from './electron/renderer/db';
+import { connectDb } from './electron/db';
 
 type Rule = {
     _id: ObjectId,

@@ -1,4 +1,4 @@
-import { generateRandomString } from '../../util';
+import { generateRandomString } from '../../../common/util';
 import {
     NOTIFY_RULE_ADDED,
     InputEditor,

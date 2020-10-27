@@ -3,7 +3,7 @@ import FormControl from 'react-bootstrap/FormControl';
 import Row from 'react-bootstrap/Row';
 import Col from 'react-bootstrap/Col';
 import Button from 'react-bootstrap/Button';
-import * as fs from '../electron/renderer/fs';
+import * as fs from '../electron/fs';
 import { RootState } from '../store';
 import { ImportEditor } from '../store/rules/types';
 import { importFile } from '../store/rules/actions'; 
