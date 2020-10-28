@@ -14,7 +14,7 @@ import Badge from 'react-bootstrap/Badge';
 import { isNil } from 'lodash';
 
 interface OwnProps {
-    id: string
+    id: number
 }
 
 interface StoreProps {

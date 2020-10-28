@@ -9,7 +9,6 @@ import {
     NOTIFY_RULE_ADDED,
     Rule,
     RuleActionTypes,
-    RuleEditorId,
     UPDATE_RULE
 } from "./types";
 import * as fs from '../../electron/fs'; 
@@ -24,7 +23,7 @@ export function addEditor(editorType: EditorType): RuleActionTypes {
     }
 }
 
-export function submitAddRule(editorId: RuleEditorId): 
+export function submitAddRule(editorId: number): 
     ThunkAction<void, RootState, unknown, RuleActionTypes> {
     return async (dispatch, getState) => {
         let db = await connectDb();
@@ -50,7 +49,7 @@ export function submitAddRule(editorId: RuleEditorId):
     }
 }
 
-export function updateRule(inputEditorId: RuleEditorId, rule: Rule): RuleActionTypes {
+export function updateRule(inputEditorId: number, rule: Rule): RuleActionTypes {
     return {
         type: UPDATE_RULE,
         editorId: inputEditorId,
@@ -58,7 +57,7 @@ export function updateRule(inputEditorId: RuleEditorId, rule: Rule): RuleActionT
     }
 }
 
-export function importFile(importerId: RuleEditorId, file?: string): 
+export function importFile(importerId: number, file?: string): 
     ThunkAction<void, RootState, unknown, RuleActionTypes> {
     return async (dispatch) => {
         dispatch({

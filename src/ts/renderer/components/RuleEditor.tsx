@@ -1,82 +1,44 @@
-import React from 'react';
+import React, { useState } from 'react';
 import Form from 'react-bootstrap/Form';
 import Row from 'react-bootstrap/Row';
 import RuleInput from './RuleInput';
 import { RootState } from '../store';
-import { connect } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import { updateRule } from '../store/rules/actions';
 import { Attribute, InputEditor, Rule } from '../store/rules/types';
 import Alert from 'react-bootstrap/Alert';
 import classNames from 'classnames';
-import { generateRandomString } from '../../common/util';
+import { getUniqueIndex } from '../../common/util';
 import EditorLayout from './EditorLayout';
+import { debounce } from 'lodash';
 
-interface OwnProps {
-    id: string
+interface Props {
+    id: number
 }
-
-interface StoreProps {
-    isAddedNotify: boolean
-}
-
-const mapState = (state: RootState, props: OwnProps): StoreProps => ({
-    isAddedNotify: (state.rules.editors.find(e => e.id === props.id) as InputEditor).isRuleAddedNotify
-})
-
-const mapDispatch = { updateRule }
-
-type Props = OwnProps & StoreProps & typeof mapDispatch;
 
 interface Condition extends Attribute {
-    inputId: string
+    inputId: number
 }
 
-interface State {
-    conditions: Condition[],
-    answer: Attribute
-}
+export default function RuleEditor(props: Props) {
+    const [conditions, setConditions] = useState<Condition[]>([{
+        inputId: getUniqueIndex(),
+        parameter: '',
+        value: ''
+    }]);
+    const [answerParameter, setAnswerParameter] = useState('');
+    const [answerValue, setAnswerValue] = useState('');
+    const isAddedNotify = useSelector((state: RootState) => (state.rules.editors
+        .find(e => e.id === props.id) as InputEditor).isRuleAddedNotify)
+    const dispatch = useDispatch();
 
-class RuleEditor extends React.Component<Props, State> {
-    
-    constructor(props: Props) {
-        super(props);
-        this.state = {
-            conditions: this.generateConditionsWithOneEmptyInput([]),
-            answer: {
-                parameter: '',
-                value: ''
-            }
-        };
-    }
-
-    public render(): JSX.Element {
-        let { props, state } = this;
-        return <EditorLayout title="Новое правило">
-            <Form onSubmit={(e) => e.preventDefault()}>
-                {props.isAddedNotify && <Alert variant="success">Правило успешно добавлено</Alert>}
-                {state.conditions.map((cond, index) =>
-                    <Form.Group as={Row} key={index} className={classNames({
-                        'addition-rule-editor-row': index !== 0 && cond.parameter === '' && cond.value === ''
-                    })}>
-                        <RuleInput size={6} label={index === 0 ? 'Если' : 'и'}
-                            onChange={(value) => this.setConditionParamter(value, index)} />
-                        <RuleInput attribute={cond.parameter} size={6} label="="
-                            onChange={(value) => this.setConditionValue(value, index)} />
-                    </Form.Group>
-                )}
-                <Form.Group as={Row}>
-                    <RuleInput size={6} label="то" onChange={(value) => this.setAnswerParameter(value)} />
-                    <RuleInput size={6} label="=" attribute={state.answer.parameter}
-                        onChange={(value) => this.setAnswerValue(value)} />
-                </Form.Group>
-            </Form>
-        </EditorLayout> 
-    }
-
-    private assembleRule(): Rule {
+    function assembleRule(): Rule {
         return {
-            answer: this.state.answer,
-            conditions: this.state.conditions.reduce((object, condition) => {
+            answer: {
+                parameter: answerParameter,
+                value: answerValue
+            },
+            conditions: conditions.reduce((object, condition) => {
                 if (condition.parameter === '' && condition.value === '') return object;
                 object[condition.parameter] = condition.value;
                 return object
@@ -84,76 +46,70 @@ class RuleEditor extends React.Component<Props, State> {
         }
     }
 
-    private setConditionParamter(name: string, index: number) {
-        this.setState((state) => {
-            let newState = { ...state };
-            let oldCondition = state.conditions[index];
-            if (oldCondition.value === '') {
-                // Either parameter was empty or it became empty. Otherwise there
-                // is no change and this method is not called
-                if (oldCondition.parameter === '') {
-                    newState.conditions.push({
-                        inputId: generateRandomString(5),
-                        parameter: '', value: ''
-                    });
-                } else if (name === '') {
-                    newState.conditions.pop();
+    function setConditionParamter(name: string, inputId: number) {
+        let newConditions = [...conditions];
+        newConditions.find(cond => cond.inputId === inputId).parameter = name;
+        setConditions(generateConditionsWithOneEmptyInput(newConditions, inputId));
+        dispatch(updateRule(props.id, assembleRule()));
+    }
+
+    function setConditionValue(value: string, inputId: number) {
+        let newConditions = [...conditions];
+        newConditions.find(cond => cond.inputId === inputId).value = value;
+        setConditions(generateConditionsWithOneEmptyInput(newConditions, inputId));
+        dispatch(updateRule(props.id, assembleRule()));
+    }
+
+    function generateConditionsWithOneEmptyInput(initConditions: Condition[], ignoreInputId: number): Condition[] {
+        let result = [...initConditions];
+        let emptyIndexFound = -1;
+        for (let i = 0; i < result.length; ++i) {
+            if (result[i].parameter === '' && result[i].value === '') {
+                if (emptyIndexFound == -1) {
+                    emptyIndexFound = i;
+                } else if (result[i].inputId !== ignoreInputId) {
+                    result.splice(i, 1);
+                    return result;
+                } else {
+                    result.splice(emptyIndexFound, 1);
+                    return result;
                 }
             }
-            newState.conditions[index].parameter = name;
-            return newState;
-        });
-        this.props.updateRule(this.props.id, this.assembleRule());
-    }
-
-    private setConditionValue(value: string, index: number) {
-        this.setState((state) => {
-            let newState = { ...state };
-            let oldCondition = state.conditions[index];
-            if (oldCondition.parameter === '') {
-                // Either value was empty or it became empty. Otherwise there
-                // is no change and this method is not called
-                if (oldCondition.value === '') {
-                    newState.conditions.push({
-                        inputId: generateRandomString(5),
-                        parameter: '', value: ''
-                    });
-                } else if (value === '') {
-                    newState.conditions.pop();
-                }
-            }
-            newState.conditions[index].value = value;
-            return newState;
-        });
-        this.props.updateRule(this.props.id, this.assembleRule());
-    }
-
-    private setAnswerParameter(name: string) {
-        this.setState((state) => ({
-            answer: {
-                ...state.answer,
-                parameter: name
-            }
-        }));
-        this.props.updateRule(this.props.id, this.assembleRule());
-    }
-
-    private setAnswerValue(value: string) {
-        this.setState((state) => ({
-            answer: { ...state.answer, value }
-        }));
-        this.props.updateRule(this.props.id, this.assembleRule());
-    }
-
-    private generateConditionsWithOneEmptyInput(currentConditions: Condition[]): Condition[] {
-        let result = currentConditions.filter(cond => cond.parameter !== '' || cond.value !== '');
-        result.push({
-            inputId: generateRandomString(5),
-            parameter: '',
-            value: ''
-        });
+        }
+        if (emptyIndexFound == -1) {
+            result.push({
+                inputId: getUniqueIndex(),
+                parameter: '',
+                value: ''
+            });
+        }
         return result;
     }
-}
 
-export default connect<StoreProps, typeof mapDispatch>(mapState, mapDispatch)(RuleEditor);
+    return <EditorLayout title="Новое правило">
+        <Form onSubmit={(e) => e.preventDefault()}>
+            {isAddedNotify && <Alert variant="success">Правило успешно добавлено</Alert>}
+            {conditions.map((cond, index) =>
+                <Form.Group as={Row} key={cond.inputId} className={classNames({
+                    'addition-rule-editor-row': index !== 0 && cond.parameter === '' && cond.value === ''
+                })}>
+                    <RuleInput size={6} label={index === 0 ? 'Если' : 'и'}
+                        onChange={value => debounce(() => setConditionParamter(value, cond.inputId), 100)()} />
+                    <RuleInput attribute={cond.parameter} size={6} label="="
+                        onChange={value => debounce(() => setConditionValue(value, cond.inputId), 100)()} />
+                </Form.Group>
+            )}
+            <Form.Group as={Row}>
+                <RuleInput size={6} label="то" onChange={value => debounce(() => {
+                    setAnswerParameter(value);
+                    dispatch(updateRule(props.id, assembleRule()));
+                }, 100)()} />
+                <RuleInput size={6} label="=" attribute={answerParameter}
+                    onChange={value => debounce(() => {
+                        setAnswerValue(value);
+                        dispatch(updateRule(props.id, assembleRule()));
+                    }, 100)()} />
+            </Form.Group>
+        </Form>
+    </EditorLayout> 
+}

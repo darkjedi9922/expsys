@@ -8,22 +8,20 @@ export interface Rule {
     answer: Attribute
 }
 
-export type RuleEditorId = string;
-
 export enum EditorType {
     INPUT = 'INPUT',
     IMPORTER = 'IMPORTER'
 }
 
 export interface InputEditor {
-    id: RuleEditorId,
+    id: number,
     type: typeof EditorType.INPUT,
     isRuleAddedNotify: boolean,
     currentRule?: Rule
 }
 
 export interface ImportEditor {
-    id: RuleEditorId,
+    id: number,
     type: typeof EditorType.IMPORTER,
     currentFile?: string,
     generatedRules?: Rule[],
@@ -45,24 +43,24 @@ export interface AddEditor {
 
 export interface ImportFile {
     type: typeof IMPORT_FILE,
-    importerId: RuleEditorId,
+    importerId: number,
     file?: string
 }
 
 export interface InductRules {
     type: typeof INDUCT_RULES,
-    importerId: RuleEditorId,
+    importerId: number,
     rules: Rule[]
 }
 
 export interface NotifyRuleAdded {
     type: typeof NOTIFY_RULE_ADDED,
-    editorId: RuleEditorId
+    editorId: number
 }
 
 export interface UpdateRule {
     type: typeof UPDATE_RULE,
-    editorId: RuleEditorId,
+    editorId: number,
     rule: Rule
 }
 

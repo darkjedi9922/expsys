@@ -1,4 +1,4 @@
-import { generateRandomString } from '../../../common/util';
+import { getUniqueIndex } from '../../../common/util';
 import {
     NOTIFY_RULE_ADDED,
     InputEditor,
@@ -25,11 +25,11 @@ export function ruleReducer(state = initialState, action: RuleActionTypes): Rule
                     ...state.editors,
                     action.editorType === EditorType.INPUT
                         ? {
-                            id: generateRandomString(6),
+                            id: getUniqueIndex(),
                             type: EditorType.INPUT,
                             isRuleAddedNotify: false,
                         } : {
-                            id: generateRandomString(6),
+                            id: getUniqueIndex(),
                             type: EditorType.IMPORTER,
                             isRuleAddedNotify: false
                         }
