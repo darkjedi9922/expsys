@@ -13,7 +13,7 @@ import {
     UPDATE_RULE
 } from "./types";
 import * as fs from '../../electron/fs'; 
-import generateProductionRules from "../../inductor";
+import generateProductionRules from '../../../system/inductor';
 import papaparse from 'papaparse';
 import { isNil } from "lodash";
 
