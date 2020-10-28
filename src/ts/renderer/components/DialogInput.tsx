@@ -41,7 +41,7 @@ class DialogInput extends React.Component<Props, State> {
           <Form.Row>
             <Col>
               <Form.Text className="text-muted">
-                Введите значение атрибута <Badge variant="info">{props.attribute}</Badge>{' '}
+                Введите значение атрибута <Badge variant="light">{props.attribute}</Badge>{' '}
                 или оставьте поле пустым, если не знаете ответ
               </Form.Text>
             </Col>

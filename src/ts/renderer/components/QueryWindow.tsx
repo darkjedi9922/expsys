@@ -4,60 +4,39 @@ import Container from 'react-bootstrap/Container';
 import Row from 'react-bootstrap/Row';
 import CenterWindow from './CenterWindow';
 import { startQuery, answerHint } from '../store/query/actions';
-import { connect } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import { RootState } from '../store';
 import DialogInput from './DialogInput';
 import { isNil } from 'lodash';
 import Alert from 'react-bootstrap/Alert';
 import AskForm from './AskForm';
+import DialogHistory from './DialogHistory';
 
-interface StoreProps {
-  askingAttribute?: string,
-  answer?: string,
-  queringCompleted: boolean
+export default function QueryWindow() {
+  const aimAttribute = useSelector((state: RootState) => state.query.aimAttribute);
+  const askingHintAttribute = useSelector((state: RootState) => state.query.askingHintAttribute);
+  const answer = useSelector((state: RootState) => state.query.answer);
+  const queringCompleted = useSelector((state: RootState) => state.query.queringCompleted);
+  const dispatch = useDispatch();
+
+  return <CenterWindow>
+    <Container>
+      <Row>
+        <Col>
+          <AskForm onAsk={attribute => dispatch(startQuery(attribute))} />
+        </Col>
+      </Row>
+      <DialogHistory/>
+      <Row>
+        <Col>
+          {!isNil(askingHintAttribute) &&
+            <DialogInput attribute={askingHintAttribute} onAnswer={(answer) => dispatch(answerHint(answer))} />}
+          {queringCompleted && answer !== null &&
+            <Alert variant="success">Ответ: {aimAttribute} — {answer}</Alert>}
+          {queringCompleted && answer === null &&
+            <Alert variant="danger">Ответ не найден</Alert>}
+        </Col>
+      </Row>
+    </Container>
+  </CenterWindow>
 }
-
-const mapState = (state: RootState): StoreProps => ({
-  askingAttribute: state.query.askingAttribute,
-  answer: state.query.answer,
-  queringCompleted: state.query.queringCompleted
-})
-
-const actions = { startQuery, answerHint };
-
-type Props = StoreProps & typeof actions;
-
-interface State {}
-
-class QueryWindow extends React.Component<Props, State> {
-
-  public constructor(props: Props) {
-    super(props);
-    this.state = {}
-  }
-
-  public render(): JSX.Element {
-    let { props, state } = this;
-    return <CenterWindow>
-      <Container>
-        <Row>
-          <Col>
-            <AskForm onAsk={attribute => props.startQuery(attribute)} />
-          </Col>
-        </Row>
-        <Row>
-          <Col>
-            {!isNil(props.askingAttribute) &&
-              <DialogInput attribute={props.askingAttribute} onAnswer={(answer) => props.answerHint(answer)} />}
-            {props.queringCompleted && props.answer !== null &&
-              <Alert variant="success">Ответ: {props.answer}</Alert>}
-            {props.queringCompleted && props.answer === null &&
-              <Alert variant="danger">Ответ не найден</Alert>}
-          </Col>
-        </Row>
-      </Container>
-    </CenterWindow>
-  }
-}
-
-export default connect<StoreProps, typeof actions>(mapState, actions)(QueryWindow);
