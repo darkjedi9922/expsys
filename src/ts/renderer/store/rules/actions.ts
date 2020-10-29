@@ -7,7 +7,6 @@ import {
     IMPORT_FILE,
     INDUCT_RULES,
     NOTIFY_RULE_ADDED,
-    Rule,
     RuleActionTypes,
     UPDATE_RULE
 } from "./types";
@@ -15,6 +14,7 @@ import * as fs from '../../electron/fs';
 import generateProductionRules from '../../../system/inductor';
 import papaparse from 'papaparse';
 import { isNil } from "lodash";
+import { Rule } from "../../../models/database";
 
 export function addEditor(editorType: EditorType): RuleActionTypes {
     return {

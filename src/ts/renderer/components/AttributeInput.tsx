@@ -7,6 +7,8 @@ interface Props {
     attribute?: string,
     className?: string,
     placeholder?: string,
+    readOnly?: boolean,
+    defaultValue?: string,
     onChange: (value: string) => void
 }
 
@@ -85,8 +87,8 @@ class AttributeInput extends React.Component<Props, State> {
 
     public render(): JSX.Element {
         const { props, state } = this;
-        return <HintInput hints={state.hints} className={props.className} 
-            placeholder={props.placeholder} onChange={props.onChange} />
+        return <HintInput hints={state.hints} className={props.className} readOnly={props.readOnly}
+            defaultValue={props.defaultValue} placeholder={props.placeholder} onChange={props.onChange} />
     }
 }
 

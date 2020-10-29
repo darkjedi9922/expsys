@@ -3,14 +3,14 @@ import Col from 'react-bootstrap/Col';
 import Container from 'react-bootstrap/Container';
 import Row from 'react-bootstrap/Row';
 import CenterWindow from './CenterWindow';
-import { startQuery, answerHint } from '../store/query/actions';
+import { startQuery, answerHint } from '../../store/query/actions';
 import { useDispatch, useSelector } from 'react-redux';
-import { RootState } from '../store';
-import DialogInput from './DialogInput';
+import { RootState } from '../../store';
+import DialogInput from '../DialogInput';
 import { isNil } from 'lodash';
 import Alert from 'react-bootstrap/Alert';
-import AskForm from './AskForm';
-import DialogHistory from './DialogHistory';
+import AskForm from '../AskForm';
+import DialogHistory from '../DialogHistory';
 
 export default function QueryWindow() {
   const aimAttribute = useSelector((state: RootState) => state.query.aimAttribute);

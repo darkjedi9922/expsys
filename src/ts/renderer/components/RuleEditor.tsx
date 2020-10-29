@@ -2,35 +2,43 @@ import React, { useState } from 'react';
 import Form from 'react-bootstrap/Form';
 import Row from 'react-bootstrap/Row';
 import RuleInput from './RuleInput';
-import { RootState } from '../store';
-import { useDispatch, useSelector } from 'react-redux';
-import { updateRule } from '../store/rules/actions';
-import { Attribute, InputEditor, Rule } from '../store/rules/types';
 import Alert from 'react-bootstrap/Alert';
 import classNames from 'classnames';
 import { getUniqueIndex } from '../../common/util';
 import EditorLayout from './EditorLayout';
-import { debounce } from 'lodash';
+import { debounce, isNil, map } from 'lodash';
+import { ParamValue, Rule } from '../../models/database';
 
 interface Props {
-    id: number
+    title?: string,
+    firstInputLabel?: string,
+    isAddedNotify?: boolean,
+    errorNotify?: string,
+    defaultRule?: Rule,
+    lockedAnswerParameter?: string,
+    onChange: (rule: Rule) => void
 }
 
-interface Condition extends Attribute {
+interface Condition extends ParamValue {
     inputId: number
 }
 
 export default function RuleEditor(props: Props) {
-    const [conditions, setConditions] = useState<Condition[]>([{
-        inputId: getUniqueIndex(),
-        parameter: '',
-        value: ''
-    }]);
-    const [answerParameter, setAnswerParameter] = useState('');
-    const [answerValue, setAnswerValue] = useState('');
-    const isAddedNotify = useSelector((state: RootState) => (state.rules.editors
-        .find(e => e.id === props.id) as InputEditor).isRuleAddedNotify)
-    const dispatch = useDispatch();
+    const [conditions, setConditions] = useState<Condition[]>(props.defaultRule
+        ? generateConditionsWithOneEmptyInput(map(props.defaultRule.conditions, (value, attribute) => ({
+            inputId: getUniqueIndex(),
+            parameter: attribute,
+            value: value
+        }))) : [{
+            inputId: getUniqueIndex(),
+            parameter: '',
+            value: ''
+        }]
+    );
+    const [answerParameter, setAnswerParameter] = useState(
+        props.lockedAnswerParameter ? props.lockedAnswerParameter :
+            props.defaultRule ? props.defaultRule.answer.parameter : '');
+    const [answerValue, setAnswerValue] = useState(props.defaultRule ? props.defaultRule.answer.value : '');
 
     function assembleRule(): Rule {
         return {
@@ -50,17 +58,17 @@ export default function RuleEditor(props: Props) {
         let newConditions = [...conditions];
         newConditions.find(cond => cond.inputId === inputId).parameter = name;
         setConditions(generateConditionsWithOneEmptyInput(newConditions, inputId));
-        dispatch(updateRule(props.id, assembleRule()));
+        props.onChange(assembleRule());
     }
 
     function setConditionValue(value: string, inputId: number) {
         let newConditions = [...conditions];
         newConditions.find(cond => cond.inputId === inputId).value = value;
         setConditions(generateConditionsWithOneEmptyInput(newConditions, inputId));
-        dispatch(updateRule(props.id, assembleRule()));
+        props.onChange(assembleRule());
     }
 
-    function generateConditionsWithOneEmptyInput(initConditions: Condition[], ignoreInputId: number): Condition[] {
+    function generateConditionsWithOneEmptyInput(initConditions: Condition[], ignoreInputId: number = -1): Condition[] {
         let result = [...initConditions];
         let emptyIndexFound = -1;
         for (let i = 0; i < result.length; ++i) {
@@ -86,29 +94,31 @@ export default function RuleEditor(props: Props) {
         return result;
     }
 
-    return <EditorLayout title="Новое правило">
+    return <EditorLayout title={props.title || 'Новое правило'}>
         <Form onSubmit={(e) => e.preventDefault()}>
-            {isAddedNotify && <Alert variant="success">Правило успешно добавлено</Alert>}
+            {props.isAddedNotify && <Alert variant="success">Правило успешно добавлено</Alert>}
+            {props.errorNotify && <Alert variant="danger">{props.errorNotify}</Alert>}
             {conditions.map((cond, index) =>
                 <Form.Group as={Row} key={cond.inputId} className={classNames({
-                    'addition-rule-editor-row': index !== 0 && cond.parameter === '' && cond.value === ''
+                    'addition-rule-editor-row': index !== 0 && cond.parameter === '' && cond.value === '',
                 })}>
                     <RuleInput size={6} label={index === 0 ? 'Если' : 'и'}
-                        onChange={value => debounce(() => setConditionParamter(value, cond.inputId), 100)()} />
+                        onChange={value => setConditionParamter(value, cond.inputId)} />
                     <RuleInput attribute={cond.parameter} size={6} label="="
-                        onChange={value => debounce(() => setConditionValue(value, cond.inputId), 100)()} />
+                        onChange={value => setConditionValue(value, cond.inputId)} />
                 </Form.Group>
             )}
-            <Form.Group as={Row}>
-                <RuleInput size={6} label="то" onChange={value => debounce(() => {
-                    setAnswerParameter(value);
-                    dispatch(updateRule(props.id, assembleRule()));
-                }, 100)()} />
-                <RuleInput size={6} label="=" attribute={answerParameter}
-                    onChange={value => debounce(() => {
+            <Form.Group as={Row} className="mb-0">
+                <RuleInput size={6} label="то" onChange={value => {
+                        setAnswerParameter(value);
+                        props.onChange(assembleRule());
+                    }} readOnly={!isNil(props.lockedAnswerParameter)}
+                    defaultValue={props.lockedAnswerParameter || props.defaultRule && props.defaultRule.answer.parameter} />
+                <RuleInput size={6} label="=" attribute={props.lockedAnswerParameter || answerParameter}
+                    onChange={value => {
                         setAnswerValue(value);
-                        dispatch(updateRule(props.id, assembleRule()));
-                    }, 100)()} />
+                        props.onChange(assembleRule());
+                    }} defaultValue={props.defaultRule && props.defaultRule.answer.value}/>
             </Form.Group>
         </Form>
     </EditorLayout> 

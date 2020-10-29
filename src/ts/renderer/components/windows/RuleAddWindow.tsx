@@ -2,14 +2,14 @@ import React from 'react';
 import Container from 'react-bootstrap/Container';
 import Row from 'react-bootstrap/Row';
 import Col from 'react-bootstrap/Col';
-import InputEditor from './RuleEditor';
+import RuleEditor from '../RuleEditor';
 import CenterWindow from './CenterWindow';
-import { RootState } from '../store';
-import { EditorType } from '../store/rules/types';
+import { RootState } from '../../store';
+import { EditorType } from '../../store/rules/types';
 import { useDispatch, useSelector } from 'react-redux';
-import { addEditor, submitAddRule } from '../store/rules/actions';
+import { addEditor, importFile, submitAddRule, updateRule } from '../../store/rules/actions';
 import Button from 'react-bootstrap/Button';
-import CsvImporter from './CsvImporter';
+import CsvImporter from '../CsvImporter';
 import classNames from 'classnames';
 
 export default function RuleAddWindow() {
@@ -22,8 +22,11 @@ export default function RuleAddWindow() {
         <Row key={editor.id}>
           <Col>
             {editor.type === EditorType.INPUT 
-              ? <InputEditor id={editor.id} />
-              : <CsvImporter id={editor.id} />}
+              ? <RuleEditor isAddedNotify={editor.isRuleAddedNotify}
+                  onChange={rule => dispatch(updateRule(editor.id, rule))} />
+              : <CsvImporter isRuleAddedNotify={editor.isRuleAddedNotify}
+                generatedRules={editor.generatedRules}
+                onSelect={file => dispatch(importFile(editor.id, file))} />}
           </Col>
         </Row>
       ).sort((a, b) => parseInt(a.key.toString()) - parseInt(b.key.toString()))}

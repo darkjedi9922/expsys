@@ -35,6 +35,12 @@
       "css": "comment-empty",
       "code": 61669,
       "src": "fontawesome"
+    },
+    {
+      "uid": "a3f89e106175a5c5c4e9738870b12e55",
+      "css": "tags",
+      "code": 59149,
+      "src": "fontawesome"
     }
   ]
 }

@@ -1,12 +1,4 @@
-export interface Attribute {
-    parameter: string,
-    value: string
-}
-
-export interface Rule {
-    conditions: { [parameter: string]: string },
-    answer: Attribute
-}
+import { Rule } from "../../../models/database";
 
 export enum EditorType {
     INPUT = 'INPUT',

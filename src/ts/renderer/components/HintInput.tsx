@@ -10,6 +10,8 @@ interface Props {
     hints: string[],
     className?: string,
     placeholder?: string,
+    readOnly?: boolean,
+    defaultValue?: string,
     onChange: (value: string) => void
 }
 
@@ -50,8 +52,9 @@ class HintInput extends React.Component<Props, State> {
         return <OnBlurComponent onBlur={() => this.hideHints()} className={styles.root}>
             <FormControl type="text" placeholder={props.placeholder}
                 className={props.className} onChange={e => props.onChange(e.target.value)}
-                onFocus={() => this.showHints()} onKeyDown={(e) => this.onKeyDown(e)}
-                ref={this.inputRef} />
+                onBlur={(e: React.FocusEvent<HTMLInputElement>) => props.onChange(e.target.value)}
+                onFocus={() => !props.readOnly && this.showHints()} onKeyDown={(e) => this.onKeyDown(e)}
+                ref={this.inputRef} readOnly={props.readOnly} defaultValue={props.defaultValue} />
             {state.showHints && props.hints.length !== 0 && <Card className={`${styles.hintBlock} ${styles.card}`}
                 style={{ 'height': state.blockHeight }} ref={this.hintBlockRef}>
                 <Card.Body className={styles.cardBody}>
