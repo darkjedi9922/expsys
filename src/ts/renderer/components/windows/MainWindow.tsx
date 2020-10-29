@@ -8,15 +8,43 @@ import MenuIcon from '../MenuIcon';
 import RuleAddWindow from './RuleAddWindow';
 import { Link, Route, Switch } from 'react-router-dom';
 import AttributeEditWindow from './AttributeEditWindow';
+import AttributeListWindow from './AttributeListWindow';
+import classNames from 'classnames';
+
+interface MenuIcon {
+    link: string,
+    title: string,
+    fontelloIcon: string
+}
+
+const rightMenuValues: MenuIcon[] = [
+    {
+        link: '/attributes/add',
+        title: 'Добавить атрибут',
+        fontelloIcon: 'tags'
+    },
+    {
+        link: '/attributes',
+        title: 'Список атрибутов',
+        fontelloIcon: 'list-bullet'
+    },
+    {
+        link: '/rules/add',
+        title: 'Добавить правило',
+        fontelloIcon: 'doc-new'
+    }
+]
 
 const MainWindow = function(): JSX.Element {
     return <Container fluid={true} className={css.root}>
         <Row className={css.content}>
             <Col className="py-3">
                 <Switch>
-                    <Route exact path="/" component={QueryWindow} />
                     <Route path="/rules/add" component={RuleAddWindow} />
                     <Route path="/attributes/add" component={AttributeEditWindow} />
+                    <Route path="/attributes/item" component={AttributeEditWindow} />
+                    <Route path="/attributes" component={AttributeListWindow} />
+                    <Route path="/" component={QueryWindow} />
                 </Switch>
             </Col>
         </Row>
@@ -28,16 +56,13 @@ const MainWindow = function(): JSX.Element {
             </Col>
             <Col md="auto">
                 <Row>
-                    <Col className="pr-0">
-                        <Link to="/attributes/add">
-                            <MenuIcon title="Добавить атрибут" fontelloIcon="tags" buttonVariant="primary" />
-                        </Link>
-                    </Col>
-                    <Col>
-                        <Link to="/rules/add">
-                            <MenuIcon title="Добавить правило" fontelloIcon="doc-new" buttonVariant="primary" />
-                        </Link>
-                    </Col>
+                    {rightMenuValues.map((item, index) => 
+                        <Col key={index} className={classNames({ 'pr-0': index !== rightMenuValues.length - 1 })}>
+                            <Link to={item.link}>
+                                <MenuIcon title={item.title} fontelloIcon={item.fontelloIcon} buttonVariant="primary" />
+                            </Link>
+                        </Col>
+                    )}
                 </Row>
             </Col>
         </Row>

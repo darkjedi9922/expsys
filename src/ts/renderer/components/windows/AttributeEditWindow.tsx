@@ -16,7 +16,7 @@ import { map } from 'lodash';
 import { connectDb } from '../../electron/db';
 
 interface Props {
-  attribute?: Attribute
+  defaultAttribute?: Attribute
 }
 
 interface Editor {
@@ -26,7 +26,7 @@ interface Editor {
 }
 
 export default function AttributeEditWindow(props: Props) {
-  const [attribute, setAttribute] = useState(props.attribute && props.attribute.name || '');
+  const [attribute, setAttribute] = useState(props.defaultAttribute && props.defaultAttribute.name || '');
   const [editors, setEditors] = useState<Editor[]>([createNewEditor()]);
   const [defaultValue, setDefaultValue] = useState<string>(null);
   const [attributeNameError, setAttributeNameError] = useState<string>(null);

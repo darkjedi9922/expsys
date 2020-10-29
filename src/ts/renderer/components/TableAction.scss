@@ -1,0 +1,18 @@
+.action {
+    display: inline-flex;
+    justify-content: center;
+}
+
+.yellow {
+    &:hover {
+        color: #d39e00;
+        cursor: pointer;
+    }
+}
+
+.blue {
+    &:hover {
+        color: #007bff;
+        cursor: pointer;
+    }
+}
