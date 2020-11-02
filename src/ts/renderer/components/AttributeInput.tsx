@@ -10,20 +10,24 @@ interface Props {
     placeholder?: string,
     readOnly?: boolean,
     defaultValue?: string,
+    excludeHintOnlyValues?: boolean,
     onChange: (value: string) => void
 }
 
 export default function AttributeInput(props: Props) {
     const [hints, setHints] = useState<string[]>([]);
+    const [isHintsShowed, setIsHintsShowed] = useState(false);
 
     useEffect(() => {
         console.log(`effect with attribute ${props.attribute}`);
-        let exists = true;
-        loadHints().then(hints => {
-            if (exists) setHints(hints);
-        });
-        return () => exists = false;
-    }, [props.attribute])
+        if (isHintsShowed) {
+            let exists = true;
+            loadHints().then(hints => {
+                if (exists) setHints(hints);
+            });
+            return () => exists = false;
+        }
+    }, [isHintsShowed])
 
     async function loadHints(): Promise<string[]> {
         let db = await connectDb();
@@ -82,5 +86,10 @@ export default function AttributeInput(props: Props) {
     }
 
     return <HintInput hints={hints} className={props.className} readOnly={props.readOnly}
-        defaultValue={props.defaultValue} placeholder={props.placeholder} onChange={props.onChange} />
+        defaultValue={props.defaultValue} placeholder={props.placeholder} onChange={props.onChange}
+        onShowHints={() => {
+            setIsHintsShowed(true)
+        }} onHideHints={() => {
+            setIsHintsShowed(false);
+        }} />
 }

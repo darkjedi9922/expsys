@@ -2,14 +2,14 @@ import React from 'react';
 import Container from 'react-bootstrap/Container';
 import Row from 'react-bootstrap/Row';
 import Col from 'react-bootstrap/Col';
-import RuleEditor from '../RuleEditor';
+import RuleEditor from '../editors/RuleEditor';
 import CenterWindow from './CenterWindow';
 import { RootState } from '../../store';
 import { EditorType } from '../../store/rules/types';
 import { useDispatch, useSelector } from 'react-redux';
 import { addEditor, importFile, submitAddRule, updateRule } from '../../store/rules/actions';
 import Button from 'react-bootstrap/Button';
-import CsvImporter from '../CsvImporter';
+import CsvImporter from '../editors/CsvImporter';
 import classNames from 'classnames';
 
 export default function RuleAddWindow() {

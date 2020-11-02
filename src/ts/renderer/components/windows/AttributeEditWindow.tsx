@@ -3,40 +3,31 @@ import Container from 'react-bootstrap/Container';
 import Row from 'react-bootstrap/Row';
 import Col from 'react-bootstrap/Col';
 import CenterWindow from './CenterWindow';
-import { Attribute, AttributeValue, Rule } from '../../../models/database';
+import { Attribute, AttributeValue, Condition } from '../../../models/database';
 import Form from 'react-bootstrap/Form';
-import FormControl from 'react-bootstrap/FormControl';
 import Button from 'react-bootstrap/Button';
 import { getUniqueIndex } from '../../../common/util';
-import RuleEditor from '../RuleEditor';
-import EditorLayout from '../EditorLayout';
+import EditorLayout from '../editors/EditorLayout';
 import RuleInput from '../RuleInput';
 import Alert from 'react-bootstrap/Alert';
-import { map } from 'lodash';
 import { connectDb } from '../../electron/db';
 import { useParams } from 'react-router-dom';
 import AttributeInput from '../AttributeInput';
+import AttributeEditor from '../editors/AttributeEditor';
+import { map } from 'lodash';
+import { isConditionEmpty } from '../editors/_common';
 
 interface Editor {
   id: number,
-  rule: Rule,
+  value: AttributeValue,
   errorNotify?: string
 }
 
 export default function AttributeEditWindow() {
   const { attribute: attributeQuery } = useParams<{attribute: string}>(); 
   const [loaded, setLoaded] = useState(false);
-  const [attribute, setAttribute] = useState<Attribute>({
-    name: '',
-    values: [{
-      value: '',
-      conditions: [{
-        attribute: '',
-        value: ''
-      }]
-    }],
-    defaultValue: null
-  });
+  const [attributeName, setAttributeName] = useState('');
+  const [attributeDefaultValue, setAttributeDefaultValue] = useState<string>(null);
   const [editors, setEditors] = useState<Editor[]>([createNewEditor()]);
   const [attributeNameError, setAttributeNameError] = useState<string>(null);
   const [showElseEditor, setShowElseEditor] = useState(false);
@@ -47,12 +38,17 @@ export default function AttributeEditWindow() {
 
   useEffect(() => {
     if (!loaded) {
+      setAttributeName(attributeQuery);
       (async () => {
         if (attributeQuery) {
           let db = await connectDb();
-          setAttribute(await db.collection<Attribute>('attributes').findOne({
+          let attribute = await db.collection<Attribute>('attributes').findOne({
             name: attributeQuery
-          }))
+          });
+          if (attribute.defaultValue) {
+            setShowElseEditor(true);
+            setAttributeDefaultValue(attribute.defaultValue);
+          }
           setEditors(attribute.values.map(value => createNewEditor(value)))
         }
         setLoaded(true);
@@ -63,35 +59,33 @@ export default function AttributeEditWindow() {
   function createNewEditor(value?: AttributeValue): Editor {
     return {
       id: getUniqueIndex(),
-      rule: {
-        answer: {
-          parameter: attribute.name,
-          value: value && value.value || '',
-        },
-        conditions: value && value.conditions.reduce((object, condition) => {
-          object[condition.attribute] = condition.value;
-          return object;
-        }, {}) || []
-      },
+      value: value || createEmptyValue(),
       errorNotify: null
     }
   }
 
+  function createEmptyValue(): AttributeValue {
+    return {
+      value: '',
+      conditions: []
+    };
+  }
+
   function checkErrors(): boolean {
     let fail = false;
-    if (!attribute) {
+    if (!attributeName) {
       fail = true;
       setAttributeNameError('Поле не заполнено');
     }
     let newEditors = [...editors];
     editors.forEach(editor => {
-      if (!isRuleFilled(editor.rule)) {
+      if (!isValueFilled(editor.value)) {
         fail = true;
         newEditors.find(e => e.id === editor.id).errorNotify = 'Не все обязательные поля заполнены';
       }
     })
     setEditors(newEditors);
-    if (showElseEditor && !attribute.defaultValue) {
+    if (showElseEditor && !attributeDefaultValue) {
       fail = true;
       setElseEditorError('Поле не заполнено');
     }
@@ -99,31 +93,82 @@ export default function AttributeEditWindow() {
     return !fail;
   }
 
-  function isRuleFilled(rule: Rule): boolean {
-    if (!rule.answer.parameter || !rule.answer.value) return false;
-    for (const condName in rule.conditions) {
-        const condValue = rule.conditions[condName];
-        if (!condName || !condValue) return false;
+  function isValueFilled(value: AttributeValue): boolean {
+    if (!value.value) return false;
+    for (let i = 0; i < value.conditions.length; ++i) {
+      if (isConditionEmpty(value.conditions[i])) return false;
     }
     return true;
   }
 
   async function insertAttributeToDb(attribute: Attribute) {
     let db = await connectDb();
+    await insertConditionsAsAttributesToDb(reduceAllConditions(attribute));
     await db.collection<Attribute>('attributes').insertOne(attribute);
   }
 
   async function updateAttributeInDb(attribute: Attribute) {
     let db = await connectDb();
+    await insertConditionsAsAttributesToDb(reduceAllConditions(attribute));
     await db.collection<Attribute>('attributes').updateOne({
       _id: attribute._id
     }, {
       $set: {
         name: attribute.name,
-        values: attribute.values,
+        values: attribute.values.map(value => ({
+          ...value,
+          asHint: false
+        })),
         defaultValue: attribute.defaultValue
       }
     });
+  }
+
+  function reduceAllConditions(attribute: Attribute): Condition[] {
+    return attribute.values.reduce((conditions, value) => {
+      return conditions.concat(value.conditions);
+    }, []);
+  }
+
+  async function insertConditionsAsAttributesToDb(conditions: Condition[]) {
+    let db = await connectDb();
+    let collection = db.collection<Attribute>('attributes');
+    let attributeValues: { [attribute: string]: string[] } = {};
+    conditions.forEach(condition => {
+      attributeValues[condition.attribute] = attributeValues[condition.attribute] || [];
+      attributeValues[condition.attribute].push(condition.value);
+    });
+    map(attributeValues, async (values, attributeName) => {
+      let attribute = await collection.findOne({ name: attributeName });
+      if (!attribute) {
+        collection.insertOne({
+          name: attributeName,
+          values: values.map(v => ({
+            value: v,
+            asHintOnly: true,
+            conditions: []
+          } as AttributeValue))
+        })
+      } else {
+        let newValues = [...attribute.values];
+        values.forEach(v => {
+          if (!newValues.find(nv => nv.value === v) && attribute.defaultValue !== v) {
+            newValues.push({
+              value: v,
+              asHintOnly: true,
+              conditions: []
+            })
+          }
+        });
+        collection.updateOne({
+          _id: attribute._id,
+        }, {
+          $set: {
+            values: newValues
+          }
+        })
+      }
+    })
   }
 
   function resetSubmitState() {
@@ -136,48 +181,51 @@ export default function AttributeEditWindow() {
     setAddedNotify(false);
   }
 
+  function assembleAttribute(): Attribute {
+    return {
+      name: attributeName,
+      values: editors.map(editor => editor.value),
+      defaultValue: attributeDefaultValue
+    }
+  }
+
   return <CenterWindow>
     <Container>
       {attributeNameError && <Alert variant="danger">{attributeNameError}</Alert>}
       <Form.Group as={Row}>
         <Form.Label column md={1} className="text-center pr-0">Атрибут</Form.Label>
-        <Col><AttributeInput defaultValue={attribute.name} onChange={value => {
-          let newAttribute = {...attribute};
-          newAttribute.name = value;
-          setAttribute(newAttribute);
+        <Col><AttributeInput defaultValue={attributeName} onChange={value => {
+          setAttributeName(value);
           setEditors(editors.map(editor => {
             let newEditor = {...editor};
-            newEditor.rule.answer.parameter = value;
+            newEditor.value.value = value;
             return newEditor;
           }));
           resetSubmitState();
         }} /></Col>
       </Form.Group>
       {editors.sort((a, b) => a.id - b.id).map((editor, index) =>
-        <RuleEditor key={editor.id} title={index === 0 ? 'Если' : 'Иначе, если'}
-          firstInputLabel="Параметр" defaultRule={editor.rule} errorNotify={editor.errorNotify}
-          lockedAnswerParameter={attribute.name} onChange={rule => {
+        <AttributeEditor key={editor.id} title={index === 0 ? 'Если' : 'Иначе, если'}
+          errorNotify={editor.errorNotify} attribute={attributeName} value={editor.value}
+          onChange={newValue => {
+            console.log('Value change handler', JSON.stringify(newValue))
             let newEditors = [...editors];
             let newEditor = newEditors.find(e => e.id === editor.id);
-            newEditor.rule = rule;
-            newEditor.rule.answer.parameter = attribute.name;
+            newEditor.value = newValue;
             setEditors(newEditors);
             resetSubmitState();
-          }}
-        />
+          }} />
       )}
       {showElseEditor &&
         <EditorLayout title="Иначе">
           {elseEditorError && <Alert variant="danger">{elseEditorError}</Alert>}
           <Row>
-            <Col md={6}>
-              <FormControl readOnly={true} defaultValue={attribute.name} />
+            <Col md="6">
+              <span>{attributeName}</span>
             </Col>
-            <RuleInput label="=" size={6} attribute={attribute.name} defaultValue={attribute.defaultValue || ''}
+            <RuleInput label="=" size={6} attribute={attributeName} defaultValue={attributeDefaultValue || ''}
               onChange={value => {
-                let newAttribute = {...attribute};
-                newAttribute.defaultValue = value;
-                setAttribute(newAttribute);
+                setAttributeDefaultValue(attributeDefaultValue);
                 resetSubmitState();
               }} />
           </Row>
@@ -199,8 +247,8 @@ export default function AttributeEditWindow() {
           <Button variant="danger" disabled={processing} onClick={async () => {
             setProcessing(true);
             if (checkErrors()) {
-              if (!attributeQuery) await insertAttributeToDb(attribute);
-              else await updateAttributeInDb(attribute);
+              if (!attributeQuery) await insertAttributeToDb(assembleAttribute());
+              else await updateAttributeInDb(assembleAttribute());
               setAddedNotify(true);
             }
             setProcessing(false);

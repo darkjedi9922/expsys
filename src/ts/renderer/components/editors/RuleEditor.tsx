@@ -1,13 +1,13 @@
 import React, { useState } from 'react';
 import Form from 'react-bootstrap/Form';
 import Row from 'react-bootstrap/Row';
-import RuleInput from './RuleInput';
+import RuleInput from '../RuleInput';
 import Alert from 'react-bootstrap/Alert';
 import classNames from 'classnames';
-import { getUniqueIndex } from '../../common/util';
+import { getUniqueIndex } from '../../../common/util';
 import EditorLayout from './EditorLayout';
 import { debounce, isNil, map } from 'lodash';
-import { ParamValue, Rule } from '../../models/database';
+import { ParamValue, Rule } from '../../../models/database';
 
 interface Props {
     title?: string,

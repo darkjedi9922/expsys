@@ -3,12 +3,12 @@ import FormControl from 'react-bootstrap/FormControl';
 import Row from 'react-bootstrap/Row';
 import Col from 'react-bootstrap/Col';
 import Button from 'react-bootstrap/Button';
-import * as fs from '../electron/fs';
+import * as fs from '../../electron/fs';
 import EditorLayout from './EditorLayout';
 import Alert from 'react-bootstrap/Alert';
 import Badge from 'react-bootstrap/Badge';
 import { isNil } from 'lodash';
-import { Rule } from '../../models/database';
+import { Rule } from '../../../models/database';
 
 interface Props {
   isRuleAddedNotify: boolean,

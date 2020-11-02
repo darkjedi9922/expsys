@@ -18,6 +18,7 @@ export interface Condition {
 
 export interface AttributeValue {
     value: string,
+    asHintOnly?: boolean,
     conditions: Condition[]
 }
 
