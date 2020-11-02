@@ -42,7 +42,7 @@ const MainWindow = function(): JSX.Element {
                 <Switch>
                     <Route path="/rules/add" component={RuleAddWindow} />
                     <Route path="/attributes/add" component={AttributeEditWindow} />
-                    <Route path="/attributes/item" component={AttributeEditWindow} />
+                    <Route path="/attributes/item/:attribute" component={AttributeEditWindow} />
                     <Route path="/attributes" component={AttributeListWindow} />
                     <Route path="/" component={QueryWindow} />
                 </Switch>

@@ -1,5 +1,6 @@
 import { isNil } from 'lodash';
-import React from 'react';
+import React, { useEffect, useState } from 'react';
+import { Attribute } from '../../models/database';
 import { connectDb } from '../electron/db';
 import HintInput from './HintInput';
 
@@ -12,84 +13,74 @@ interface Props {
     onChange: (value: string) => void
 }
 
-interface State {
-    hints: string[]
-}
+export default function AttributeInput(props: Props) {
+    const [hints, setHints] = useState<string[]>([]);
 
-class AttributeInput extends React.Component<Props, State> {
+    useEffect(() => {
+        console.log(`effect with attribute ${props.attribute}`);
+        let exists = true;
+        loadHints().then(hints => {
+            if (exists) setHints(hints);
+        });
+        return () => exists = false;
+    }, [props.attribute])
 
-    public constructor(props: Props) {
-        super(props);
-        this.state = {
-            hints: []
-        };
-    }
-
-    public componentDidMount() {
-        this.laodHints();
-    }
-
-    public componentDidUpdate(prevProps: Props) {
-        if (prevProps.attribute !== this.props.attribute) {
-            this.laodHints();
-        }
-    }
-
-    private async laodHints() {
+    async function loadHints(): Promise<string[]> {
         let db = await connectDb();
-        if (isNil(this.props.attribute)) {
-            let result = await db.collection<{ name: string }>('rules').aggregate([
+        if (isNil(props.attribute) || props.attribute === '') {
+            let result = await db.collection<Attribute>('attributes').aggregate<{ name: string }>([
+                {
+                    $project: {
+                        name: 1,
+                        _id: 0
+                    }
+                }
+            ]).toArray();
+            console.log(`loading hints with ${props.attribute}`, result)
+            return result.map(h => h.name).sort();
+        } else {
+            let result = await db.collection<Attribute>('attributes').aggregate<{ value: string }>([
+                {
+                    $match: {
+                        name: props.attribute
+                    }
+                },
                 {
                     '$project': {
-                        'name': {
-                            '$reduce': {
-                                'input': {
-                                    '$objectToArray': '$conditions'
-                                },
-                                'initialValue': ['$answer.parameter'],
-                                'in': {
-                                    '$concatArrays': ['$$value', ['$$this.k']]
-                                }
-                            }
-                        },
-                        '_id': 0
-                    }
-                },
-                { '$unwind': '$name' },
-                { '$group': { '_id': { 'name': '$name' } } },
-                { '$project': { 'name': '$_id.name', '_id': 0 } }
-            ]).toArray();
-            this.setState({ hints: result.map(h => h.name).sort() });
-        } else if (this.props.attribute !== '') {
-            let result = await db.collection<{ value: string }>('rules').aggregate([
-                { '$match': { 'answer.parameter': this.props.attribute } },
-                { '$project': { 'value': '$answer.value', '_id': 0 } },
-                {
-                    '$unionWith': {
-                        'coll': 'rules',
-                        'pipeline': [
-                            { '$match': { [`conditions.${this.props.attribute}`]: { '$exists': true } } },
-                            {
-                                '$project': {
-                                    'value': `$conditions.${this.props.attribute}`,
-                                    '_id': 0
-                                }
-                            }
+                        'value': [
+                            '$values.value', '$defaultValue'
                         ]
                     }
-                },
-                { '$group': { '_id': { 'value': '$value' } } },
-                { '$project': { 'value': '$_id.value', '_id': 0 } }
+                }, {
+                    '$unwind': {
+                        'path': '$value'
+                    }
+                }, {
+                    '$unwind': {
+                        'path': '$value'
+                    }
+                }, {
+                    '$match': {
+                        'value': {
+                            '$ne': false
+                        }
+                    }
+                }, {
+                    '$group': {
+                        '_id': '$value'
+                    }
+                }, {
+                    '$project': {
+                        'value': '$_id',
+                        '_id': 0
+                    }
+                }
             ]).toArray();
-            this.setState({ hints: result.map(h => h.value).sort() });
+            console.log(`loading hints with ${props.attribute}`, result)
+            return result.map(h => h.value).sort();
         }
     }
 
-    public render(): JSX.Element {
-        const { props, state } = this;
-        return <HintInput hints={state.hints} className={props.className} readOnly={props.readOnly}
-            defaultValue={props.defaultValue} placeholder={props.placeholder} onChange={props.onChange} />
-    }
+    return <HintInput hints={hints} className={props.className} readOnly={props.readOnly}
+        defaultValue={props.defaultValue} placeholder={props.placeholder} onChange={props.onChange} />
 }
-
-export default AttributeInput;

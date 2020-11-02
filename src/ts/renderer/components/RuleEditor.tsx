@@ -102,9 +102,9 @@ export default function RuleEditor(props: Props) {
                 <Form.Group as={Row} key={cond.inputId} className={classNames({
                     'addition-rule-editor-row': index !== 0 && cond.parameter === '' && cond.value === '',
                 })}>
-                    <RuleInput size={6} label={index === 0 ? 'Если' : 'и'}
+                    <RuleInput size={6} label={index === 0 ? 'Если' : 'и'} defaultValue={cond.parameter}
                         onChange={value => setConditionParamter(value, cond.inputId)} />
-                    <RuleInput attribute={cond.parameter} size={6} label="="
+                    <RuleInput attribute={cond.parameter} size={6} label="=" defaultValue={cond.value}
                         onChange={value => setConditionValue(value, cond.inputId)} />
                 </Form.Group>
             )}

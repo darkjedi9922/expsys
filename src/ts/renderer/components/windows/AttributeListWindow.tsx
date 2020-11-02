@@ -1,12 +1,9 @@
 import React, { useEffect, useState } from 'react';
-import Table from 'react-bootstrap/Table';
 import { Attribute } from '../../../models/database';
 import { connectDb } from '../../electron/db';
-import NoneValue from '../NoneValue';
-import CenterWindow from './CenterWindow';
-import Card from 'react-bootstrap/Card';
-import TableAction from '../TableAction';
 import { Link } from 'react-router-dom';
+import Button from 'react-bootstrap/Button';
+import Card from '../Card';
 
 export default function AttributeListWindow() {
   const [attributes, setAttributes] = useState<Attribute[]>(null);
@@ -21,35 +18,23 @@ export default function AttributeListWindow() {
     }
   })
 
-  return <CenterWindow>
-    <Card>
-      <Card.Header>Список атрибутов</Card.Header>
-      <Card.Body>
-        <Table>
-          <thead>
-            <tr>
-              <th>#</th>
-              <th>Атрибут</th>
-              <th>Правил</th>
-              <th>По-умолчанию</th>
-              <th></th>
-            </tr>
-          </thead>
-          <tbody>
-            {attributes && attributes.map((attr, index) => <tr key={index}>
-              <th>{index}</th>
-              <td>{attr.name}</td>
-              <td>{attr.values.length}</td>
-              <td>{attr.defaultValue || <NoneValue/>}</td>
-              <td>
-                <Link to="/attributes/item/:attribute">
-                  <TableAction tooltip="Редактировать" fontelloIcon="pencil" color="blue" />
-                </Link>
-              </td>
-            </tr>)}
-          </tbody>
-        </Table>
-      </Card.Body>
-    </Card>
-  </CenterWindow> 
+  return (
+    <div className="attribute-list-window">
+      {attributes && attributes.map((attr, index) => (
+          <Card key={index} title={attr.name} actions={(
+            <Link to={`/attributes/item/${attr.name}`}>
+              <Button variant="secondary">Редактировать</Button>
+            </Link>
+          )}>
+            {attr.values.map((value, index) => (
+              <p key={index}>Если {value.conditions.map((cond, index) => (
+                <span key={index}>
+                  {cond.attribute} = {cond.value}{index !== value.conditions.length - 1 ? ' и ' : ''}
+                </span>
+              ))}, то {attr.name} = {value.value}</p>
+            ))}
+          </Card>
+      ))}
+    </div>
+  )
 }

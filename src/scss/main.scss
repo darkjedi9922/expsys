@@ -1,12 +1,14 @@
 @import '~bootstrap/dist/css/bootstrap.min.css';
 @import '../libs/fontello/css/fontello-embedded.css';
+@import url('https://fonts.googleapis.com/css2?family=Open+Sans&family=Roboto:wght@400&display=swap');
+@import './variables.scss';
 
 html, body {
     height: 100%;
 }
+
 body {
-    background: #e7ebef;
-    font-family: 'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif;
+    background: $body-background;
     font-size: 18px;
 }
 
@@ -22,6 +24,10 @@ body {
     &__graph {
         flex-grow: 1;
     }
+}
+
+p:last-child {
+    margin-bottom: 0;
 }
 
 .addition-rule-editor-row {
