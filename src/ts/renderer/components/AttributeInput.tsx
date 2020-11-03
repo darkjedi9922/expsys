@@ -1,6 +1,5 @@
-import { isNil } from 'lodash';
+import { isEmpty } from 'lodash';
 import React, { useEffect, useState } from 'react';
-import { Attribute } from '../../models/database';
 import { connectDb } from '../electron/db';
 import HintInput from './HintInput';
 
@@ -10,7 +9,7 @@ interface Props {
     placeholder?: string,
     readOnly?: boolean,
     defaultValue?: string,
-    excludeHintOnlyValues?: boolean,
+    onlyResolvable?: boolean,
     onChange: (value: string) => void
 }
 
@@ -31,54 +30,37 @@ export default function AttributeInput(props: Props) {
 
     async function loadHints(): Promise<string[]> {
         let db = await connectDb();
-        if (isNil(props.attribute) || props.attribute === '') {
-            let result = await db.collection<Attribute>('attributes').aggregate<{ name: string }>([
-                {
-                    $project: {
-                        name: 1,
-                        _id: 0
-                    }
-                }
-            ]).toArray();
+        if (isEmpty(props.attribute)) {
+            let result = props.onlyResolvable 
+                ? await db.collection('attributes')
+                    .find({ 'values.conditions.0': { $exists: true } }, { projection: { name: 1, _id: 0 } })
+                    .toArray()
+                : await db.collection('attributes').aggregate([
+                    { $unwind: '$values' },
+                    { $unwind: '$values.conditions' },
+                    { $project: { name: ['$name', '$values.conditions.attribute'] } },
+                    { $unwind: '$name' },
+                    { $group: { _id: '$name' } },
+                    { $project: { _id: 0, name: '$_id' } }
+                ]).toArray();
             console.log(`loading hints with ${props.attribute}`, result)
             return result.map(h => h.name).sort();
         } else {
-            let result = await db.collection<Attribute>('attributes').aggregate<{ value: string }>([
-                {
-                    $match: {
-                        name: props.attribute
-                    }
-                },
-                {
-                    '$project': {
-                        'value': [
-                            '$values.value', '$defaultValue'
-                        ]
-                    }
-                }, {
-                    '$unwind': {
-                        'path': '$value'
-                    }
-                }, {
-                    '$unwind': {
-                        'path': '$value'
-                    }
-                }, {
-                    '$match': {
-                        'value': {
-                            '$ne': false
-                        }
-                    }
-                }, {
-                    '$group': {
-                        '_id': '$value'
-                    }
-                }, {
-                    '$project': {
-                        'value': '$_id',
-                        '_id': 0
-                    }
-                }
+            let result = await db.collection('attributes').aggregate([
+                { $project: { _id: 0, name: 1, 'values.value': 1, defaultValue: 1 } },
+                { $unwind: '$values' },
+                { $project: { name: 1, value: ['$values.value', '$defaultValue'] } },
+                { $unwind: '$value' },
+                { $unionWith: { coll: 'attributes', pipeline: [
+                    { $project: { _id: 0, 'values.conditions': 1 } },
+                    { $unwind: '$values' },
+                    { $project: { conditions: '$values.conditions' } },
+                    { $unwind: '$conditions' },
+                    { $project: { name: '$conditions.attribute', value: '$conditions.value' } }
+                ]}},
+                { $match: { name: props.attribute, value: { $type: 'string' } } },
+                { $group: { _id: '$value' } },
+                { $project: { _id: 0, value: '$_id' } }
             ]).toArray();
             console.log(`loading hints with ${props.attribute}`, result)
             return result.map(h => h.value).sort();
