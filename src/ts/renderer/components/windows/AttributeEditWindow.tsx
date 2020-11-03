@@ -174,7 +174,7 @@ export default function AttributeEditWindow() {
             </Col>
             <RuleInput label="=" size={6} attribute={attributeName} defaultValue={attributeDefaultValue || ''}
               onChange={value => {
-                setAttributeDefaultValue(attributeDefaultValue);
+                setAttributeDefaultValue(value);
                 resetSubmitState();
               }} />
           </Row>
