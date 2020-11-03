@@ -16,6 +16,7 @@ import AttributeInput from '../AttributeInput';
 import AttributeEditor from '../editors/AttributeEditor';
 import { map } from 'lodash';
 import { isConditionEmpty } from '../editors/_common';
+import { ObjectId } from 'mongodb';
 
 interface Editor {
   id: number,
@@ -24,8 +25,9 @@ interface Editor {
 }
 
 export default function AttributeEditWindow() {
-  const { attribute: attributeQuery } = useParams<{attribute: string}>(); 
+  const { attribute: attributeQuery } = useParams<{attribute: string}>();
   const [loaded, setLoaded] = useState(false);
+  const [attributeId, setAttributeId] = useState<ObjectId>(null);
   const [attributeName, setAttributeName] = useState('');
   const [attributeDefaultValue, setAttributeDefaultValue] = useState<string>(null);
   const [editors, setEditors] = useState<Editor[]>([createNewEditor()]);
@@ -45,6 +47,7 @@ export default function AttributeEditWindow() {
           let attribute = await db.collection<Attribute>('attributes').findOne({
             name: attributeQuery
           });
+          setAttributeId(attribute._id);
           if (attribute.defaultValue) {
             setShowElseEditor(true);
             setAttributeDefaultValue(attribute.defaultValue);
@@ -103,72 +106,18 @@ export default function AttributeEditWindow() {
 
   async function insertAttributeToDb(attribute: Attribute) {
     let db = await connectDb();
-    await insertConditionsAsAttributesToDb(reduceAllConditions(attribute));
     await db.collection<Attribute>('attributes').insertOne(attribute);
   }
 
   async function updateAttributeInDb(attribute: Attribute) {
     let db = await connectDb();
-    await insertConditionsAsAttributesToDb(reduceAllConditions(attribute));
-    await db.collection<Attribute>('attributes').updateOne({
-      _id: attribute._id
-    }, {
+    await db.collection<Attribute>('attributes').updateOne({ _id: attributeId }, {
       $set: {
         name: attribute.name,
-        values: attribute.values.map(value => ({
-          ...value,
-          asHint: false
-        })),
+        values: attribute.values,
         defaultValue: attribute.defaultValue
       }
     });
-  }
-
-  function reduceAllConditions(attribute: Attribute): Condition[] {
-    return attribute.values.reduce((conditions, value) => {
-      return conditions.concat(value.conditions);
-    }, []);
-  }
-
-  async function insertConditionsAsAttributesToDb(conditions: Condition[]) {
-    let db = await connectDb();
-    let collection = db.collection<Attribute>('attributes');
-    let attributeValues: { [attribute: string]: string[] } = {};
-    conditions.forEach(condition => {
-      attributeValues[condition.attribute] = attributeValues[condition.attribute] || [];
-      attributeValues[condition.attribute].push(condition.value);
-    });
-    map(attributeValues, async (values, attributeName) => {
-      let attribute = await collection.findOne({ name: attributeName });
-      if (!attribute) {
-        collection.insertOne({
-          name: attributeName,
-          values: values.map(v => ({
-            value: v,
-            asHintOnly: true,
-            conditions: []
-          } as AttributeValue))
-        })
-      } else {
-        let newValues = [...attribute.values];
-        values.forEach(v => {
-          if (!newValues.find(nv => nv.value === v) && attribute.defaultValue !== v) {
-            newValues.push({
-              value: v,
-              asHintOnly: true,
-              conditions: []
-            })
-          }
-        });
-        collection.updateOne({
-          _id: attribute._id,
-        }, {
-          $set: {
-            values: newValues
-          }
-        })
-      }
-    })
   }
 
   function resetSubmitState() {
