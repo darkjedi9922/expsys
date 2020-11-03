@@ -36,7 +36,7 @@ export default function AttributeEditWindow() {
   const [elseEditorError, setElseEditorError] = useState<string>(null);
   const [processing, setProcessing] = useState(false);
   const [hasErrors, setHasErrors] = useState(false);
-  const [addedNotify, setAddedNotify] = useState(false);
+  const [savedNotify, setSavedNotify] = useState(false);
 
   useEffect(() => {
     if (!loaded) {
@@ -127,7 +127,7 @@ export default function AttributeEditWindow() {
     setAttributeNameError(null);
     setElseEditorError(null);
     setHasErrors(false);
-    setAddedNotify(false);
+    setSavedNotify(false);
   }
 
   function assembleAttribute(): Attribute {
@@ -180,7 +180,7 @@ export default function AttributeEditWindow() {
           </Row>
         </EditorLayout>
       }
-      {addedNotify && <Alert variant="success">Атрибут успешно сохранен</Alert>}
+      {savedNotify && <Alert variant="success">Атрибут успешно сохранен</Alert>}
       {hasErrors && <Alert variant="danger">Редактор содержит ошибки. Исправьте их перед продолжением</Alert>}
       <Row className="justify-content-between">
         <Col>
@@ -198,7 +198,7 @@ export default function AttributeEditWindow() {
             if (checkErrors()) {
               if (!attributeQuery) await insertAttributeToDb(assembleAttribute());
               else await updateAttributeInDb(assembleAttribute());
-              setAddedNotify(true);
+              setSavedNotify(true);
             }
             setProcessing(false);
           }}>Сохранить</Button>
