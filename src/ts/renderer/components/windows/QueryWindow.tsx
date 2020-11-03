@@ -9,7 +9,7 @@ import { RootState } from '../../store';
 import DialogInput from '../DialogInput';
 import { isNil } from 'lodash';
 import Alert from 'react-bootstrap/Alert';
-import AskForm from '../AskForm';
+import QueryForm from '../QueryForm';
 import DialogHistory from '../DialogHistory';
 
 export default function QueryWindow() {
@@ -23,7 +23,7 @@ export default function QueryWindow() {
     <Container>
       <Row>
         <Col>
-          <AskForm onAsk={attribute => dispatch(startQuery(attribute))} />
+          <QueryForm onQuery={attribute => dispatch(startQuery(attribute))} />
         </Col>
       </Row>
       <DialogHistory/>
