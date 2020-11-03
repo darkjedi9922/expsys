@@ -24,7 +24,7 @@ export default async function* resolveRecursively(attributeName: string,
             console.log('Handling value', value);
             for (let j = 0; j < value.conditions.length; ++j) {
                 let condition = value.conditions[j];
-                if (!context[condition.attribute]) {
+                if (context[condition.attribute] === undefined) {
                     let hint: string | null = yield condition.attribute;
                     context[condition.attribute] = hint;
                     if (hint === null) {
