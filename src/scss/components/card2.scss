@@ -1,6 +1,6 @@
 @import '../variables.scss';
 
-.my-card {
+.card2 {
     background: white;
     border-radius: 0.4rem;
     &:not(:last-child) {
@@ -15,6 +15,7 @@
     }
     &__title {
         font-family: $header-font;
+        font-weight: bold;
     }
     &__body {
         font-family: $body-font;
