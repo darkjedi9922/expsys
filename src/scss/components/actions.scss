@@ -1,0 +1,8 @@
+.actions {
+    &__item {
+        display: inline-block;
+        &:not(:last-child) {
+            margin-right: 0.7rem
+        }
+    }
+}
