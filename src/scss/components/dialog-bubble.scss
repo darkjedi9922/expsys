@@ -1,0 +1,54 @@
+.dialog-bubble {
+    $marginSide: 0.75rem;
+    $arrowWidth: 0.5rem;
+    $borderWidth: 1px;
+    $borderColor: #c7c7c7;
+
+    background: white;
+    margin: $marginSide;
+    padding: 0.2rem 0.65rem;
+    border-radius: 0.4rem;
+    border: solid $borderWidth $borderColor;
+
+    &__arrow {
+        width: 0;
+        height: 0;
+        border-top: 0.4rem solid transparent;
+        border-bottom: 0.4rem solid transparent;
+        position: absolute;
+        top: 1.4rem;
+
+        &--right {
+            right: 0;
+            border-left: $arrowWidth solid white;
+            padding-right: $marginSide +  $arrowWidth;
+            padding-left: $borderWidth;
+        }
+        &--left {
+            left: 0;
+            border-right: $arrowWidth solid white;
+            padding-left: $marginSide +  $arrowWidth;
+            padding-right: $borderWidth;
+        }
+    }
+
+    &__arrow-border {
+        width: 0;
+        height: 0;
+        border-top: 0.4rem solid transparent;
+        border-bottom: 0.4rem solid transparent;
+        position: absolute;
+        top: 1.4rem;
+
+        &--right {
+            right: 0;
+            border-left: $arrowWidth solid $borderColor;
+            padding-right: $marginSide +  $arrowWidth;
+        }
+        &--left {
+            left: 0;
+            border-right: $arrowWidth solid $borderColor;
+            padding-left: $marginSide +  $arrowWidth;
+        }
+    }
+}
