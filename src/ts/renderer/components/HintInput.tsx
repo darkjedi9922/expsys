@@ -5,6 +5,7 @@ import OnBlurComponent from './OnBlurComponent';
 import Card from 'react-bootstrap/Card';
 import styles from './HintInput.css.json';
 import $ from 'jquery';
+import classNames from 'classnames';
 
 interface Props {
   hints: string[],
@@ -85,9 +86,9 @@ export default function HintInput(props: Props) {
     }
   }
 
-  return <OnBlurComponent onBlur={() => hideHints()} className={styles.root}>
+  return <OnBlurComponent onBlur={() => hideHints()} className={classNames([styles.root, props.className])}>
     <FormControl type="text" placeholder={props.placeholder}
-      className={props.className} onChange={e => props.onChange(e.target.value)}
+      onChange={e => props.onChange(e.target.value)}
       onBlur={(e: React.FocusEvent<HTMLInputElement>) => props.onChange(e.target.value)}
       onFocus={() => !props.readOnly && showHints()} onKeyDown={(e) => onKeyDown(e)}
       ref={inputRef} readOnly={props.readOnly} defaultValue={props.defaultValue} />
