@@ -18,6 +18,7 @@ import { isConditionEmpty } from '../editors/_common';
 import { ObjectId } from 'mongodb';
 import { isEmpty } from 'lodash';
 import Actions from '../Actions';
+import DefaultValueEditor from '../editors/DefaultValueEditor';
 
 interface Editor {
   id: number,
@@ -167,22 +168,19 @@ export default function AttributeEditWindow() {
             newEditor.value = newValue;
             setEditors(newEditors);
             resetSubmitState();
+          }} onRemove={editors.length === 1 ? undefined : () => {
+            setEditors(editors.filter(e => e.id !== editor.id));
           }} />
       )}
-      {showElseEditor &&
-        <EditorLayout title="Иначе">
-          {elseEditorError && <Alert variant="danger">{elseEditorError}</Alert>}
-          <Row>
-            <Col md="6">
-              <span>{attributeName}</span>
-            </Col>
-            <RuleInput label="=" size={6} attribute={attributeName} defaultValue={attributeDefaultValue || ''}
-              onChange={value => {
-                setAttributeDefaultValue(value);
-                resetSubmitState();
-              }} />
-          </Row>
-        </EditorLayout>
+      {showElseEditor && <DefaultValueEditor error={elseEditorError} attribute={attributeName}
+        defaultValue={attributeDefaultValue || ''} onChange={value => {
+          setAttributeDefaultValue(value);
+          resetSubmitState();
+        }} onRemove={() => {
+          setAttributeDefaultValue(null);
+          setShowElseEditor(false);
+          resetSubmitState();
+        }} />
       }
       {savedNotify && <Alert variant="success">Атрибут успешно сохранен</Alert>}
       {hasErrors && <Alert variant="danger">Редактор содержит ошибки. Исправьте их перед продолжением</Alert>}

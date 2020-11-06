@@ -4,20 +4,23 @@ import Row from 'react-bootstrap/Row';
 import RuleInput from '../RuleInput';
 import Alert from 'react-bootstrap/Alert';
 import { getUniqueIndex } from '../../../common/util';
-import EditorLayout from './EditorLayout';
-import { debounce, isEmpty, omit } from 'lodash';
+import { isEmpty, omit } from 'lodash';
 import { AttributeValue, Condition } from '../../../models/database';
 import ConditionEditor from './ConditionEditor';
 import { isConditionEmpty } from './_common';
 import Col from 'react-bootstrap/Col';
 import classNames from 'classnames';
+import Card from '../Card';
+import Actions from '../Actions';
+import Button from 'react-bootstrap/Button';
 
 interface Props {
-  title?: string,
+  title: string,
   errorNotify?: string,
   attribute?: string,
   value?: AttributeValue
-  onChange: (value: AttributeValue) => void
+  onChange: (value: AttributeValue) => void,
+  onRemove?: () => void
 }
 
 interface Value extends AttributeValue {
@@ -74,7 +77,11 @@ export default function AttributeEditor(props: Props) {
     });
   }
 
-  return <EditorLayout title={props.title || 'Новое правило'}>
+  return <Card title={props.title} actions={(
+    <Actions>
+      {props.onRemove && <Button variant="outline-danger" onClick={() => props.onRemove()}>Убрать</Button>}
+    </Actions>
+  )}>
     <Form onSubmit={(e) => e.preventDefault()}>
       {props.errorNotify && <Alert variant="danger">{props.errorNotify}</Alert>}
       {value.conditions.map((cond, index) =>
@@ -119,5 +126,5 @@ export default function AttributeEditor(props: Props) {
           }} defaultValue={value.value}/>
       </Form.Group>
     </Form>
-  </EditorLayout>
+  </Card>
 }

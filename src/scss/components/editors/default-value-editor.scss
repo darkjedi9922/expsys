@@ -1,0 +1,15 @@
+.default-value-editor {
+    &__input-row {
+        display: flex;
+        align-items: center;
+    }
+    &__attribute {
+        margin-right: 1rem;
+        &--empty {
+            color: grey;
+        }
+    }
+    &__input {
+        flex-grow: 1;
+    }
+}
