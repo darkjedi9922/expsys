@@ -14,9 +14,10 @@ import { connectDb } from '../../electron/db';
 import { useParams } from 'react-router-dom';
 import AttributeInput from '../AttributeInput';
 import AttributeEditor from '../editors/AttributeEditor';
-import { map } from 'lodash';
 import { isConditionEmpty } from '../editors/_common';
 import { ObjectId } from 'mongodb';
+import { isEmpty } from 'lodash';
+import Actions from '../Actions';
 
 interface Editor {
   id: number,
@@ -27,6 +28,7 @@ interface Editor {
 export default function AttributeEditWindow() {
   const { attribute: attributeQuery } = useParams<{attribute: string}>();
   const [loaded, setLoaded] = useState(false);
+  const [deleted, setDeleted] = useState(false);
   const [attributeId, setAttributeId] = useState<ObjectId>(null);
   const [attributeName, setAttributeName] = useState('');
   const [attributeDefaultValue, setAttributeDefaultValue] = useState<string>(null);
@@ -139,7 +141,7 @@ export default function AttributeEditWindow() {
   }
 
   return <CenterWindow>
-    <Container>
+    {!deleted ? <Container>
       {attributeNameError && <Alert variant="danger">{attributeNameError}</Alert>}
       <Form.Group as={Row}>
         <Form.Label column md={1} className="text-center pr-0">Атрибут</Form.Label>
@@ -193,17 +195,28 @@ export default function AttributeEditWindow() {
             }}>Добавить значение по умолчанию</Button>}
         </Col>
         <Col md="auto">
-          <Button variant="danger" disabled={processing} onClick={async () => {
-            setProcessing(true);
-            if (checkErrors()) {
-              if (!attributeQuery) await insertAttributeToDb(assembleAttribute());
-              else await updateAttributeInDb(assembleAttribute());
-              setSavedNotify(true);
-            }
-            setProcessing(false);
-          }}>Сохранить</Button>
+          <Actions>
+            <Button variant="success" disabled={processing} onClick={async () => {
+              setProcessing(true);
+              if (checkErrors()) {
+                if (!attributeId) await insertAttributeToDb(assembleAttribute());
+                else await updateAttributeInDb(assembleAttribute());
+                setSavedNotify(true);
+              }
+              setProcessing(false);
+            }}>Сохранить</Button>
+            {attributeId && <Button variant="danger" disabled={processing} onClick={async () => {
+              setProcessing(true);
+              let db = await connectDb();
+              db.collection<Attribute>('attributes').deleteOne({ _id: attributeId }, () => {
+                setDeleted(true);
+                setProcessing(false);
+              })
+            }}>Удалить</Button>}
+          </Actions>
         </Col>
       </Row>
     </Container>
+    : <Alert variant="success">Атрибут{!isEmpty(attributeName) ? ` ${attributeName}` : ''} успешно удален</Alert>}
   </CenterWindow>
 }
