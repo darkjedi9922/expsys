@@ -47,9 +47,9 @@ export default function HintInput(props: Props) {
 
   function hideHints() {
     props.onHideHints && props.onHideHints();
+    setShowHints(false);
     setSelectedIndex(null);
     setBlockHeight('0');
-    setShowHints(false);
   }
 
   function onKeyDown(e: React.KeyboardEvent) {

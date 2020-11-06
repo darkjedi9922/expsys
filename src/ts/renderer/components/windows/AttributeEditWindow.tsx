@@ -108,7 +108,9 @@ export default function AttributeEditWindow() {
 
   async function insertAttributeToDb(attribute: Attribute) {
     let db = await connectDb();
-    await db.collection<Attribute>('attributes').insertOne(attribute);
+    db.collection<Attribute>('attributes').insertOne(attribute, (err, res) => {
+        setAttributeId(res.insertedId);
+    });
   }
 
   async function updateAttributeInDb(attribute: Attribute) {
