@@ -67,6 +67,8 @@ export default function HintInput(props: Props) {
         setSelectedIndex(selectedIndex - 1 >= 0 ? selectedIndex - 1 : props.hints.length - 1);
       }
       e.preventDefault();
+    } else if (e.key === 'Escape') {
+      hideHints();
     }
   }
 
