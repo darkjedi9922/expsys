@@ -22,18 +22,21 @@ export default function HintInput(props: Props) {
   const [selectedIndex, setSelectedIndex] = useState<number>(null);
   const [blockHeight, setBlockHeight] = useState('0');
   const [doShowHints, setShowHints] = useState(false);
+  const [searchValue, setSearchValue] = useState(props.defaultValue || '');
   const inputRef = useRef<HTMLInputElement>(null);
   const hintBlockRef = useRef<HTMLDivElement>();
 
+  const filteredHints = props.hints.filter(hint => hint.search(new RegExp(searchValue, 'i')) !== -1);
+
   useEffect(() => {
-    if (props.hints.length !== 0 && doShowHints && blockHeight === '0') {
+    if (filteredHints.length !== 0 && doShowHints) {
       let body = $(hintBlockRef.current).find('.card-body').first();
       setBlockHeight(`${Math.min(
         body.outerHeight(),
         $(document.body).height() - body.offset().top - 25
       )}px`);
     }
-  })
+  }, [props.hints.length, doShowHints, searchValue])
 
   useEffect(() => {
     if (selectedIndex != null) correctHintBlockScroll();
@@ -58,45 +61,58 @@ export default function HintInput(props: Props) {
       if (selectedIndex === null) {
         setSelectedIndex(0);
       } else {
-        setSelectedIndex(selectedIndex + 1 < props.hints.length ? selectedIndex + 1 : 0);
+        setSelectedIndex(selectedIndex + 1 < filteredHints.length ? selectedIndex + 1 : 0);
       }
       e.preventDefault();
     } else if (e.key === 'ArrowUp') {
       if (selectedIndex === null) {
-        setSelectedIndex(props.hints.length - 1);
+        setSelectedIndex(filteredHints.length - 1);
       } else {
-        setSelectedIndex(selectedIndex - 1 >= 0 ? selectedIndex - 1 : props.hints.length - 1);
+        setSelectedIndex(selectedIndex - 1 >= 0 ? selectedIndex - 1 : filteredHints.length - 1);
       }
       e.preventDefault();
     } else if (e.key === 'Escape') {
       hideHints();
+    } else if (e.key === 'Enter' && selectedIndex !== null) {
+      hideHints();
+      inputRef.current.value = filteredHints[selectedIndex];
+      props.onChange(filteredHints[selectedIndex]);
+      e.preventDefault();
     }
   }
 
   function correctHintBlockScroll() {
-    let hintBlock = $(hintBlockRef.current);
-    let selectedItem = hintBlock.children().first()
-      .find(`:contains("${props.hints[selectedIndex]}")`).first();
-    let selectedItemTop = selectedItem.position().top;
-    let selectedItemBottom = selectedItemTop + selectedItem.outerHeight();
-    if (selectedItemBottom > hintBlock.height()) {
-      hintBlock.scrollTop(hintBlock.scrollTop() + selectedItemBottom - hintBlock.height());
-    } else if (selectedItemTop < 0) {
-      hintBlock.scrollTop(hintBlock.scrollTop() + selectedItemTop);
+    if (filteredHints.length !== 0) {
+      let hintBlock = $(hintBlockRef.current);
+      let selectedItem = hintBlock.children().first()
+        .find(`:contains("${filteredHints[selectedIndex]}")`).first();
+      let selectedItemTop = selectedItem.position().top;
+      let selectedItemBottom = selectedItemTop + selectedItem.outerHeight();
+      if (selectedItemBottom > hintBlock.height()) {
+        hintBlock.scrollTop(hintBlock.scrollTop() + selectedItemBottom - hintBlock.height());
+      } else if (selectedItemTop < 0) {
+        hintBlock.scrollTop(hintBlock.scrollTop() + selectedItemTop);
+      }
     }
+  }
+
+  function handleValueChange(value: string) {
+    setSelectedIndex(null);
+    setSearchValue(value);
+    props.onChange(value);
   }
 
   return <OnBlurComponent onBlur={() => hideHints()} className={classNames([styles.root, props.className])}>
     <FormControl type="text" placeholder={props.placeholder}
-      onChange={e => props.onChange(e.target.value)}
-      onBlur={(e: React.FocusEvent<HTMLInputElement>) => props.onChange(e.target.value)}
+      onChange={e => handleValueChange(e.target.value)}
+      onBlur={(e: React.FocusEvent<HTMLInputElement>) => handleValueChange(e.target.value)}
       onFocus={() => !props.readOnly && showHints()} onKeyDown={(e) => onKeyDown(e)}
       ref={inputRef} readOnly={props.readOnly} defaultValue={props.defaultValue} />
-    {doShowHints && props.hints.length !== 0 && (
+    {doShowHints && filteredHints.length !== 0 && (
       <Card className={`${styles.hintBlock} ${styles.card}`}
         style={{ 'height': blockHeight }} ref={hintBlockRef}>
         <Card.Body className={styles.cardBody}>
-          {props.hints.map((hint, index) =>
+          {filteredHints.map((hint, index) =>
             <Dropdown.Item key={hint} eventKey={hint} onClick={(e) => {
               inputRef.current.value = hint;
               hideHints();
