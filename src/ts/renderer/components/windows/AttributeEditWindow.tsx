@@ -170,6 +170,9 @@ export default function AttributeEditWindow() {
             resetSubmitState();
           }} onRemove={editors.length === 1 ? undefined : () => {
             setEditors(editors.filter(e => e.id !== editor.id));
+          }} onCopy={() => {
+            let newEditor = { ...editor, id: editor.id + 0.000001 };
+            setEditors([...editors, newEditor]);
           }} />
       )}
       {showElseEditor && <DefaultValueEditor error={elseEditorError} attribute={attributeName}

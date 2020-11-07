@@ -20,7 +20,8 @@ interface Props {
   attribute?: string,
   value?: AttributeValue
   onChange: (value: AttributeValue) => void,
-  onRemove?: () => void
+  onRemove?: () => void,
+  onCopy?: () => void
 }
 
 interface Value extends AttributeValue {
@@ -79,6 +80,7 @@ export default function AttributeEditor(props: Props) {
 
   return <Card title={props.title} actions={(
     <Actions>
+      {props.onCopy && <Button variant="outline-primary" onClick={() => props.onCopy()}>Скопировать</Button>}
       {props.onRemove && <Button variant="outline-danger" onClick={() => props.onRemove()}>Убрать</Button>}
     </Actions>
   )}>
