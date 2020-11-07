@@ -32,7 +32,7 @@ export default function AttributeListWindow() {
                   <Link to={`/attributes/item/${attr.name}`}>
                     <Button variant="outline-primary">Редактировать</Button>
                   </Link>
-                    <Button variant="outline-danger" onClick={async () => {
+                  <Button variant="outline-danger" onClick={async () => {
                     let db = await connectDb();
                     db.collection<Attribute>('attributes').deleteOne({ _id: attr._id }, () => {
                       setDeletedAttributeIds([...deletedAttributeIds, attr._id]);
@@ -40,18 +40,18 @@ export default function AttributeListWindow() {
                   }}>Удалить</Button>
                 </Actions>
               }>
-              {attr.values.map((value, index) => (<>
+              {attr.values.map((value, index) => (
                 <p key={index}>Если {value.conditions.map((cond, index) => (
                   <span key={index}>
                     {cond.attribute} = {cond.value}{index !== value.conditions.length - 1 ? ' и ' : ''}
                   </span>
                 ))}, то {attr.name} = {value.value}</p>
-                {!isEmpty(attr.defaultValue) && (
-                  <p>Иначе {attr.name} = {attr.defaultValue}</p>
-                )}
-              </>))}
+              ))}
+              {!isEmpty(attr.defaultValue) && (
+                <p>Иначе {attr.name} = {attr.defaultValue}</p>
+              )}
             </Card>
-            : <Alert variant="success">Атрибут успешно удален</Alert>
+            : <Alert key={index} variant="success">Атрибут успешно удален</Alert>
       ))}
     </div>
   )

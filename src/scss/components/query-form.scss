@@ -1,0 +1,12 @@
+.query-form {
+    display: flex;
+
+    &__title {
+        font-size: 1rem;
+        margin-right: 1rem;
+    }
+
+    &__form {
+        flex-grow: 1;
+    }
+}

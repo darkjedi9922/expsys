@@ -4,11 +4,58 @@
     $borderWidth: 1px;
     $borderColor: #c7c7c7;
 
-    background: white;
     margin: $marginSide;
-    padding: 0.2rem 0.65rem;
-    border-radius: 0.4rem;
-    border: solid $borderWidth $borderColor;
+    display: flex;
+    &--right {
+        flex-direction: row-reverse;
+    }
+
+    &__bubble {
+        background: white;
+        padding: 0.2rem 0.65rem;
+        border-radius: 0.4rem;
+        border: solid $borderWidth $borderColor;
+        display: inline-block;
+    }
+
+    &__content {
+        position: relative;
+    }
+
+    &__author {
+        font-weight: bold;
+        font-size: 0.9rem;
+        display: block;
+
+        &--right {
+            text-align: right;
+        }
+        &--left {
+            text-align: left;
+        }
+    }
+
+    &__avatar {
+        display: block;
+        width: 3.5rem;
+        height: 3.5rem;
+        background-size: 100%;
+        border-radius: 100%;
+
+        &--system {
+            background-image: url('../../images/GLaDOShd_Portal_2.png');
+        }
+        &--user {
+            background-image: url('../../images/salem3.png');
+            transform: scale(-1, 1);
+        }
+    }
+    &--left &__avatar {
+        margin-left: 1rem;
+    }
+    &--right &__avatar {
+        margin-right: 1rem;
+    }
 
     &__arrow {
         width: 0;
@@ -16,19 +63,14 @@
         border-top: 0.4rem solid transparent;
         border-bottom: 0.4rem solid transparent;
         position: absolute;
-        top: 1.4rem;
 
         &--right {
-            right: 0;
+            right: -$arrowWidth + 0.1rem;
             border-left: $arrowWidth solid white;
-            padding-right: $marginSide +  $arrowWidth;
-            padding-left: $borderWidth;
         }
         &--left {
-            left: 0;
+            left: -$arrowWidth + 0.1rem;
             border-right: $arrowWidth solid white;
-            padding-left: $marginSide +  $arrowWidth;
-            padding-right: $borderWidth;
         }
     }
 
@@ -38,17 +80,14 @@
         border-top: 0.4rem solid transparent;
         border-bottom: 0.4rem solid transparent;
         position: absolute;
-        top: 1.4rem;
 
         &--right {
-            right: 0;
+            right: -$arrowWidth;
             border-left: $arrowWidth solid $borderColor;
-            padding-right: $marginSide +  $arrowWidth;
         }
         &--left {
-            left: 0;
+            left: -$arrowWidth;
             border-right: $arrowWidth solid $borderColor;
-            padding-left: $marginSide +  $arrowWidth;
         }
     }
 }

@@ -6,6 +6,7 @@ const concat = require('gulp-concat');
 const postcss = require('gulp-postcss');
 const postcssModules = require('postcss-modules');
 const postcssImport = require('postcss-import');
+const postcssUrl = require('postcss-url');
 const tildeImporter = require('node-sass-tilde-importer');
 
 const tsProject = ts.createProject({
@@ -56,7 +57,13 @@ gulp.task('sass-modules', gulp.series(
 gulp.task('sass-common', function() {
     return gulp.src('src/scss/**')
         .pipe(sass({ importer: tildeImporter }))
-        .pipe(postcss([ postcssImport() ]))
+        .pipe(postcss([
+            postcssImport(),
+            postcssUrl({
+                url: 'inline',
+                filter: /\.png$/
+            })
+        ]))
         .pipe(gulp.dest('dist/css'))
 });
 

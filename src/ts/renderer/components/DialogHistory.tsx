@@ -27,7 +27,8 @@ export default function DialogHistory() {
   return <>{messages.filter(message => message.type !== MESSAGE_ANSWER).map((message) =>
       <Row key={generateRandomString(4)} className={`justify-content-${isSystemMessage(message) ? 'end' : 'start'}`}>
         <Col md="auto">
-          <DialogBubble direction={message.type === MESSAGE_HINT ? 'right' : 'left'}>
+          <DialogBubble direction={message.type === MESSAGE_HINT ? 'right' : 'left'}
+            author={message.type === MESSAGE_HINT ? 'user' : 'system'}>
             <span className={styles.text}>{generateMessageText(message)}</span>
           </DialogBubble>
         </Col>

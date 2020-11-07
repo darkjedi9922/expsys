@@ -13,9 +13,9 @@ interface Props {
 export default function QueryForm(props: Props) {
   let [attribute, setAttribute] = useState('');
 
-  return <Navbar bg="light" expand="lg">
-    <Col md="auto" className="px-0"><Navbar.Brand>Что вы хотите узнать?</Navbar.Brand></Col>
-    <Col className="px-0">
+  return <Navbar bg="light" expand="lg" className="query-form">
+    <span className="query-form__title">Если не спросить, никогда не узнаешь</span>
+    <div className="query-form__form">
       <Form className="justify-content-md-end " onSubmit={(e) => {
         props.onQuery(attribute);
         e.preventDefault();
@@ -29,6 +29,6 @@ export default function QueryForm(props: Props) {
           </Col>
         </Row>
       </Form>
-    </Col>
+    </div>
   </Navbar>
 }
