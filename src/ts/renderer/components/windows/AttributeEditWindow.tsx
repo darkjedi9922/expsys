@@ -3,12 +3,10 @@ import Container from 'react-bootstrap/Container';
 import Row from 'react-bootstrap/Row';
 import Col from 'react-bootstrap/Col';
 import CenterWindow from './CenterWindow';
-import { Attribute, AttributeValue, Condition } from '../../../models/database';
+import { Attribute, AttributeValue, Rule } from '../../../models/database';
 import Form from 'react-bootstrap/Form';
 import Button from 'react-bootstrap/Button';
 import { getUniqueIndex } from '../../../common/util';
-import EditorLayout from '../editors/EditorLayout';
-import RuleInput from '../RuleInput';
 import Alert from 'react-bootstrap/Alert';
 import { connectDb } from '../../electron/db';
 import { useParams } from 'react-router-dom';
@@ -16,15 +14,33 @@ import AttributeInput from '../AttributeInput';
 import AttributeEditor from '../editors/AttributeEditor';
 import { isConditionEmpty } from '../editors/_common';
 import { ObjectId } from 'mongodb';
-import { isEmpty } from 'lodash';
+import { isEmpty, isNil, map, trim } from 'lodash';
 import Actions from '../Actions';
 import DefaultValueEditor from '../editors/DefaultValueEditor';
+import CsvImporter from '../editors/CsvImporter';
+import paparse from 'papaparse';
+import * as fs from '../../electron/fs';
+import generateProductionRules from '../../../system/inductor';
 
-interface Editor {
+const VALUE_EDITOR = 'VALUE_EDITOR';
+const CSV_IMPORTER = 'CSV_IMPORTER';
+
+interface AbstractEditor {
   id: number,
-  value: AttributeValue,
   errorNotify?: string
 }
+
+interface ValueEditor extends AbstractEditor {
+  type: typeof VALUE_EDITOR,
+  value: AttributeValue,
+}
+
+interface ImportEditor extends AbstractEditor {
+  type: typeof CSV_IMPORTER,
+  generatedRules?: Rule[],
+}
+
+type Editor = ValueEditor | ImportEditor;
 
 export default function AttributeEditWindow() {
   const { attribute: attributeQuery } = useParams<{attribute: string}>();
@@ -33,7 +49,7 @@ export default function AttributeEditWindow() {
   const [attributeId, setAttributeId] = useState<ObjectId>(null);
   const [attributeName, setAttributeName] = useState('');
   const [attributeDefaultValue, setAttributeDefaultValue] = useState<string>(null);
-  const [editors, setEditors] = useState<Editor[]>([createNewEditor()]);
+  const [editors, setEditors] = useState<Editor[]>([]);
   const [attributeNameError, setAttributeNameError] = useState<string>(null);
   const [showElseEditor, setShowElseEditor] = useState(false);
   const [elseEditorError, setElseEditorError] = useState<string>(null);
@@ -55,18 +71,27 @@ export default function AttributeEditWindow() {
             setShowElseEditor(true);
             setAttributeDefaultValue(attribute.defaultValue);
           }
-          setEditors(attribute.values.map(value => createNewEditor(value)))
+          setEditors(attribute.values.map(value => createValueEditor(value)))
         }
         setLoaded(true);
       })()
     }
   });
 
-  function createNewEditor(value?: AttributeValue): Editor {
+  function createValueEditor(value?: AttributeValue): ValueEditor {
     return {
       id: getUniqueIndex(),
+      type: VALUE_EDITOR,
       value: value || createEmptyValue(),
       errorNotify: null
+    }
+  }
+
+  function createCsvImporter(): ImportEditor {
+    return {
+      id: getUniqueIndex(),
+      type: CSV_IMPORTER,
+      generatedRules: null
     }
   }
 
@@ -84,10 +109,21 @@ export default function AttributeEditWindow() {
       setAttributeNameError('Поле не заполнено');
     }
     let newEditors = [...editors];
-    editors.forEach(editor => {
-      if (!isValueFilled(editor.value)) {
-        fail = true;
-        newEditors.find(e => e.id === editor.id).errorNotify = 'Не все обязательные поля заполнены';
+    newEditors.forEach(editor => {
+      switch (editor.type) {
+        case VALUE_EDITOR:
+          if (!isValueFilled(editor.value)) {
+            fail = true;
+            editor.errorNotify = 'Не все обязательные поля заполнены';
+          }
+          break;
+        case CSV_IMPORTER:
+          if (editor.generatedRules && editor.generatedRules.length
+            && editor.generatedRules[0].answer.parameter !== attributeName) {
+              fail = true;
+              editor.errorNotify = 'Правила не соответствуют атрибуту'
+            }
+          break;
       }
     })
     setEditors(newEditors);
@@ -136,11 +172,58 @@ export default function AttributeEditWindow() {
   }
 
   function assembleAttribute(): Attribute {
+    let values: AttributeValue[] = [];
+    editors.forEach(editor => {
+      switch (editor.type) {
+        case VALUE_EDITOR:
+          values.push(editor.value);
+          break;
+        case CSV_IMPORTER:
+          values = values.concat(editor.generatedRules.map(rule => ({
+            value: rule.answer.value,
+            conditions: map(rule.conditions, (value, key) => ({
+              attribute: key,
+              value: value
+            }))
+          })));
+          break;
+      }
+    })
     return {
       name: attributeName,
-      values: editors.map(editor => editor.value),
+      values: values,
       defaultValue: attributeDefaultValue
     }
+  }
+
+  function removeEditor(editor: Editor) {
+    setEditors(editors.filter(e => e.id !== editor.id));
+  }
+
+  function copyEditor(editor: Editor) {
+    let newEditor = { ...editor, id: editor.id + 0.000001 };
+    setEditors([...editors, newEditor]);
+  }
+
+  async function importFile(importerId: number, file?: string) {
+    let csvData = !isNil(file) ? paparse.parse<string[]>(await fs.readFile(file)).data : null;
+    setEditors(editors.map(editor => {
+      if (editor.id === importerId) {
+        let importer = (editor as ImportEditor);
+        importer.generatedRules = !isNil(file)
+          ? generateProductionRules(csvData[0], csvData.slice(1), 0).map(rule => ({
+            conditions: Object.keys(rule[2]).reduce((conditions, key) => {
+              conditions[trim(key)] = trim(rule[2][key]);
+              return conditions;
+            }, {}),
+            answer: {
+              parameter: trim(rule[0]),
+              value: trim(rule[1])
+            }
+          })) : null;
+      }
+      return editor;
+    }))
   }
 
   return <CenterWindow>
@@ -152,28 +235,28 @@ export default function AttributeEditWindow() {
           setAttributeName(value);
           setEditors(editors.map(editor => {
             let newEditor = {...editor};
-            newEditor.value.value = value;
+            if (newEditor.type === VALUE_EDITOR) {
+              newEditor.value.value = value;
+            }
             return newEditor;
           }));
           resetSubmitState();
         }} /></Col>
       </Form.Group>
-      {editors.sort((a, b) => a.id - b.id).map((editor, index) =>
-        <AttributeEditor key={editor.id} title={index === 0 ? 'Если' : 'Иначе, если'}
+      {editors.sort((a, b) => a.id - b.id).map((editor, index) => editor.type === VALUE_EDITOR
+        ? <AttributeEditor key={editor.id} title={index === 0 ? 'Если' : 'Иначе, если'}
           errorNotify={editor.errorNotify} attribute={attributeName} value={editor.value}
           onChange={newValue => {
             console.log('Value change handler', JSON.stringify(newValue))
             let newEditors = [...editors];
             let newEditor = newEditors.find(e => e.id === editor.id);
-            newEditor.value = newValue;
+            (newEditor as ValueEditor).value = newValue;
             setEditors(newEditors);
             resetSubmitState();
-          }} onRemove={editors.length === 1 ? undefined : () => {
-            setEditors(editors.filter(e => e.id !== editor.id));
-          }} onCopy={() => {
-            let newEditor = { ...editor, id: editor.id + 0.000001 };
-            setEditors([...editors, newEditor]);
-          }} />
+          }} onRemove={() => removeEditor(editor)} onCopy={() => copyEditor(editor)} />
+        : <CsvImporter key={editor.id} onSelect={(file) => importFile(editor.id, file)}
+            onRemove={() => removeEditor(editor)} onCopy={() => copyEditor(editor)}
+            generatedRules={editor.generatedRules} errorNotify={editor.errorNotify} />
       )}
       {showElseEditor && <DefaultValueEditor error={elseEditorError} attribute={attributeName}
         defaultValue={attributeDefaultValue || ''} onChange={value => {
@@ -190,7 +273,13 @@ export default function AttributeEditWindow() {
       <Row className="justify-content-between">
         <Col>
           <Button variant="primary" className="mr-sm-2" 
-            onClick={() => setEditors([...editors, createNewEditor()])}>Добавить условие</Button>
+            onClick={() => setEditors([...editors, createValueEditor()])}>
+            Добавить условие
+          </Button>
+          <Button variant="primary" className="mr-sm-2"
+            onClick={() => setEditors([...editors, createCsvImporter()])}>
+            Импортировать из CSV
+          </Button>
           {!showElseEditor && <Button variant="primary" className="mr-sm-2"
             onClick={() => {
               setElseEditorError(null);

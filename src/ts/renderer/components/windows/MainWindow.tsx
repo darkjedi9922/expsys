@@ -5,7 +5,6 @@ import Col from 'react-bootstrap/Col';
 import css from './MainWindow.css.json';
 import QueryWindow from './QueryWindow';
 import MenuIcon from '../MenuIcon';
-import RuleAddWindow from './RuleAddWindow';
 import { Link, Route, Switch } from 'react-router-dom';
 import AttributeEditWindow from './AttributeEditWindow';
 import AttributeListWindow from './AttributeListWindow';
@@ -19,18 +18,13 @@ interface MenuIcon {
 
 const rightMenuValues: MenuIcon[] = [
     {
-        link: '/attributes/add',
-        title: 'Добавить атрибут',
-        fontelloIcon: 'tags'
-    },
-    {
         link: '/attributes',
         title: 'Список атрибутов',
         fontelloIcon: 'list-bullet'
     },
     {
-        link: '/rules/add',
-        title: 'Добавить правило',
+        link: '/attributes/add',
+        title: 'Добавить атрибут',
         fontelloIcon: 'doc-new'
     }
 ]
@@ -40,7 +34,6 @@ const MainWindow = function(): JSX.Element {
         <Row className={css.content}>
             <Col className="py-3">
                 <Switch>
-                    <Route path="/rules/add" component={RuleAddWindow} />
                     <Route path="/attributes/add" component={AttributeEditWindow} />
                     <Route path="/attributes/item/:attribute" component={AttributeEditWindow} />
                     <Route path="/attributes" component={AttributeListWindow} />

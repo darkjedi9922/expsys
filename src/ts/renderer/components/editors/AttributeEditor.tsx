@@ -80,8 +80,8 @@ export default function AttributeEditor(props: Props) {
 
   return <Card title={props.title} actions={(
     <Actions>
-      {props.onCopy && <Button variant="outline-primary" onClick={() => props.onCopy()}>Скопировать</Button>}
-      {props.onRemove && <Button variant="outline-danger" onClick={() => props.onRemove()}>Убрать</Button>}
+      {props.onCopy && <Button variant="outline-primary" onClick={props.onCopy}>Скопировать</Button>}
+      {props.onRemove && <Button variant="outline-danger" onClick={props.onRemove}>Убрать</Button>}
     </Actions>
   )}>
     <Form onSubmit={(e) => e.preventDefault()}>

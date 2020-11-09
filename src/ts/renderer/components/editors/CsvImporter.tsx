@@ -4,23 +4,31 @@ import Row from 'react-bootstrap/Row';
 import Col from 'react-bootstrap/Col';
 import Button from 'react-bootstrap/Button';
 import * as fs from '../../electron/fs';
-import EditorLayout from './EditorLayout';
 import Alert from 'react-bootstrap/Alert';
 import Badge from 'react-bootstrap/Badge';
 import { isNil } from 'lodash';
 import { Rule } from '../../../models/database';
+import Card from '../Card';
+import Actions from '../Actions';
 
 interface Props {
-  isRuleAddedNotify: boolean,
   generatedRules?: Rule[],
-  onSelect: (file: string | null) => void
+  errorNotify?: string,
+  onSelect: (file: string | null) => void,
+  onCopy?: () => void,
+  onRemove?: () => void
 }
 
 export default function CsvImporter(props: Props) {
   const [file, setFile] = useState('');
   
-  return <EditorLayout title="Импорт из CSV">
-    {props.isRuleAddedNotify && <Alert variant="success">Правила успешно добавлены</Alert>}
+  return <Card title="Импорт из CSV" actions={(
+    <Actions>
+      {props.onCopy && <Button variant="outline-primary" onClick={props.onCopy}>Скопировать</Button>}
+      {props.onRemove && <Button variant="outline-danger" onClick={props.onRemove}>Убрать</Button>}
+    </Actions>
+  )}>
+    {props.errorNotify && <Alert variant="danger">{props.errorNotify}</Alert>}
     <Row>
       <Col className="justify-content-md-end">
         <FormControl type="text" placeholder="Выберите CSV файл" defaultValue={file} readOnly={true} />
@@ -51,5 +59,5 @@ export default function CsvImporter(props: Props) {
         }
       </Col>
     </Row>}
-  </EditorLayout>
+  </Card>
 }

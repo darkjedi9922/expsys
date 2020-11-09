@@ -28,8 +28,8 @@ export default function DialogHistory(props: Props) {
       case MESSAGE_HINT:
         return !isEmpty(message.value) ? message.value : 'Это слишком сложно для меня';
       case MESSAGE_RESOLVED:
-        return `Известно, что ${message.value.conditions.map(cond => `${cond.attribute} — ${cond.value}`).join(', ')}. `
-          + `Исходя из этого вывод: ${message.attribute} — ${message.value.value}`;
+        return <>Известно, что {message.value.conditions.map(cond => `${cond.attribute} — ${cond.value}`).join(', ')}.
+          <br/>Исходя из этого вывод: {message.attribute} — {message.value.value}</>;
     }
   }
 

@@ -7,3 +7,4 @@ package-lock.json
 src/ts/renderer/components/**/*.css.json
 src/libs/fontello/*
 !src/libs/fontello/config.json
+/rules
