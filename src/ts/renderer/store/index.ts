@@ -1,11 +1,9 @@
 import { applyMiddleware, combineReducers, compose, createStore } from 'redux';
 import { ruleReducer } from './rules/reducers';
-import { queryReducer } from './query/reducers';
 import thunk from 'redux-thunk';
 
 const rootReducer = combineReducers({
     rules: ruleReducer,
-    query: queryReducer
 })
 
 const composedEnhancers = compose(
