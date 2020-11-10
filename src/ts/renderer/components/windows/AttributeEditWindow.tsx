@@ -21,6 +21,7 @@ import CsvImporter from '../editors/CsvImporter';
 import paparse from 'papaparse';
 import * as fs from '../../electron/fs';
 import generateProductionRules from '../../../system/inductor';
+import { adjustTable } from '../../../system/transpiler';
 
 const VALUE_EDITOR = 'VALUE_EDITOR';
 const CSV_IMPORTER = 'CSV_IMPORTER';
@@ -211,16 +212,16 @@ export default function AttributeEditWindow() {
       if (editor.id === importerId) {
         let importer = (editor as ImportEditor);
         importer.generatedRules = !isNil(file)
-          ? generateProductionRules(csvData[0], csvData.slice(1), 0).map(rule => ({
-            conditions: Object.keys(rule[2]).reduce((conditions, key) => {
-              conditions[trim(key)] = trim(rule[2][key]);
-              return conditions;
-            }, {}),
-            answer: {
-              parameter: trim(rule[0]),
-              value: trim(rule[1])
-            }
-          })) : null;
+          ? generateProductionRules(
+            csvData[0].map(item => trim(item)),
+            adjustTable(csvData.slice(1)), 0).map(rule => ({
+              conditions: rule[2],
+              answer: {
+                parameter: rule[0],
+                value: rule[1]
+              }
+            })
+          ) : null;
       }
       return editor;
     }))

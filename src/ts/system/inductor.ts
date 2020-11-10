@@ -1,10 +1,10 @@
-function findAttributePossibleValues(attributeIndex: number, table: string[][]): Set<string> {
+export function findAttributePossibleValues(attributeIndex: number, table: Table): Set<string> {
     let uniqueValues = new Set<string>();
     table.forEach(line => uniqueValues.add(line[attributeIndex]));
     return uniqueValues;
 }
 
-function attributeValuePossibility(attributeIndex: number, value: string, table: string[][]): number {
+function attributeValuePossibility(attributeIndex: number, value: string, table: Table): number {
     let valueCount = 0;
     table.forEach(line => {
         if (line[attributeIndex] === value) {
@@ -14,7 +14,7 @@ function attributeValuePossibility(attributeIndex: number, value: string, table:
     return valueCount / table.length;
 }
 
-function calcTableInfo(table: string[][], searchAttrIndex: number): number {
+function calcTableInfo(table: Table, searchAttrIndex: number): number {
     let result = 0;
     let attributePossibleValues = findAttributePossibleValues(searchAttrIndex, table);
     attributePossibleValues.forEach(value => {
@@ -24,8 +24,8 @@ function calcTableInfo(table: string[][], searchAttrIndex: number): number {
     return -result;
 }
 
-function divideTable(attrIndex: number, table: string[][]): string[][][] {
-    let tables: { [attributeValue: string]: string[][] } = {};
+function divideTable(attrIndex: number, table: Table): Table[] {
+    let tables: { [attributeValue: string]: Table } = {};
     table.forEach(line => {
         let attrValue = line[attrIndex];
         if (tables[attrValue] === undefined) tables[attrValue] = [];
@@ -34,7 +34,7 @@ function divideTable(attrIndex: number, table: string[][]): string[][][] {
     return Object.values(tables);
 }
 
-function calcAttributeTableInfo(attrIndex: number, table: string[][], searchAttrIndex: number): number {
+function calcAttributeTableInfo(attrIndex: number, table: Table, searchAttrIndex: number): number {
     let result = 0;
     let dividedTables = divideTable(attrIndex, table);
     dividedTables.forEach(dividedTable => {
@@ -43,11 +43,11 @@ function calcAttributeTableInfo(attrIndex: number, table: string[][], searchAttr
     return result;
 }
 
-function calcGain(attributeIndex: number, table: string[][], searchAttrIndex: number): number {
+function calcGain(attributeIndex: number, table: Table, searchAttrIndex: number): number {
     return calcTableInfo(table, searchAttrIndex) - calcAttributeTableInfo(attributeIndex, table, searchAttrIndex);
 }
 
-function isMonoTable(table: string[][], searchAttrIndex: number): boolean {
+function isMonoTable(table: Table, searchAttrIndex: number): boolean {
     let firstValue = table[0][searchAttrIndex];
     for (let i = 1; i < table.length; ++i) {
         if (table[i][searchAttrIndex] != firstValue) {
@@ -57,7 +57,7 @@ function isMonoTable(table: string[][], searchAttrIndex: number): boolean {
     return true;
 }
 
-function generateProductionRules(tableHeader: string[], table: string[][], 
+function generateProductionRules(tableHeader: string[], table: Table, 
     searchAttrIndex: number, usedAttrIndexes: number[] = []): RuleBase {
     let gains = [];
     for (let i = 0; i < tableHeader.length; ++i) {
@@ -112,6 +112,7 @@ function generateProductionRules(tableHeader: string[], table: string[][],
     return ruleBase;
 }
 
+export type Table = string[][];
 type Attribute = string;
 type Value = string;
 type Conditions = { [attribute: string]: Value };
